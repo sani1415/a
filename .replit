@@ -18,3 +18,15 @@ deploymentTarget = "cloudrun"
 localPort = 81
 externalPort = 80
 
+[workflows]
+runButton = "Run Flask App"
+
+[[workflows.workflow]]
+name = "Run Flask App"
+author = 39842365
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "python main.py"
+

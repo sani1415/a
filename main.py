@@ -28,19 +28,27 @@ def submit():
     data = request.json
     data['status'] = 'Processing'  # Default status
 
-    if not os.path.exists('data.json'):
+    try:
+        if not os.path.exists('data.json'):
+            with open('data.json', 'w', encoding='utf-8') as f:
+                json.dump([], f)
+
+        try:
+            with open('data.json', 'r', encoding='utf-8') as f:
+                content = f.read()
+                current_data = json.loads(content) if content.strip() else []
+        except json.JSONDecodeError:
+            # If JSON is invalid, start with an empty list
+            current_data = []
+
+        current_data.append(data)
+
         with open('data.json', 'w', encoding='utf-8') as f:
-            json.dump([], f)
+            json.dump(current_data, f, ensure_ascii=False, indent=2)
 
-    with open('data.json', 'r', encoding='utf-8') as f:
-        current_data = json.load(f)
-
-    current_data.append(data)
-
-    with open('data.json', 'w', encoding='utf-8') as f:
-        json.dump(current_data, f, ensure_ascii=False, indent=2)
-
-    return jsonify({"message": "Data saved successfully"})
+        return jsonify({"message": "Data saved successfully"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/data')
 def data():
@@ -124,10 +132,18 @@ def export_excel():
 
 @app.route('/status-log')
 def status_log():
-    if not os.path.exists('status_log.json'):
+    try:
+        if not os.path.exists('status_log.json'):
+            with open('status_log.json', 'w', encoding='utf-8') as f:
+                json.dump([], f)
+            return jsonify([])
+            
+        with open('status_log.json', 'r', encoding='utf-8') as f:
+            content = f.read()
+            logs = json.loads(content) if content.strip() else []
+        return jsonify(logs)
+    except Exception as e:
+        print(f"Error in status_log route: {str(e)}")
         return jsonify([])
-    with open('status_log.json', 'r', encoding='utf-8') as f:
-        logs = json.load(f)
-    return jsonify(logs)
 
 app.run(host='0.0.0.0', port=81)
