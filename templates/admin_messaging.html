@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>অ্যাডমিন বার্তা - মাদ্রাসাতুল মাদিনাহ</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .admin-container {
+      display: flex;
+      margin: 20px auto;
+      max-width: 1200px;
+    }
+
+    .students-list {
+      width: 300px;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      padding: 15px;
+      margin-right: 20px;
+      height: 600px;
+      overflow-y: auto;
+    }
+
+    .student-item {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .student-item:hover {
+      background-color: #e9ecef;
+    }
+
+    .student-item.active {
+      background-color: #e8f5e9;
+      border-left: 3px solid #28a745;
+    }
+
+    .student-name {
+      font-weight: bold;
+    }
+
+    .student-info {
+      font-size: 12px;
+      color: #6c757d;
+    }
+
+    .chat-box {
+      flex-grow: 1;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      height: 600px;
+    }
+
+    .chat-header {
+      padding: 15px;
+      border-bottom: 1px solid #ddd;
+      background-color: #f8f9fa;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+    }
+
+    .chat-header h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .chat-header .student-details {
+      font-size: 14px;
+      color: #6c757d;
+      margin-top: 5px;
+    }
+
+    .messages-container {
+      flex-grow: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      max-width: 70%;
+      margin-bottom: 15px;
+      padding: 10px 15px;
+      border-radius: 15px;
+      position: relative;
+    }
+
+    .admin-message {
+      background-color: #e8f5e9;
+      align-self: flex-end;
+      border-bottom-right-radius: 5px;
+    }
+
+    .applicant-message {
+      background-color: #dcf8c6;
+      align-self: flex-start;
+      border-bottom-left-radius: 5px;
+    }
+
+    .message-time {
+      font-size: 11px;
+      color: #888;
+      margin-top: 5px;
+    }
+
+    .input-area {
+      padding: 15px;
+      border-top: 1px solid #ddd;
+      display: flex;
+    }
+
+    .input-area textarea {
+      flex-grow: 1;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 10px;
+      margin-right: 10px;
+      resize: none;
+      height: 60px;
+    }
+
+    .input-area button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      cursor: pointer;
+      align-self: flex-end;
+    }
+
+    .no-student-selected {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      color: #6c757d;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-left: 8px;
+    }
+
+    .Processing { background-color: #ffc107; color: black; }
+    .Accepted { background-color: #28a745; color: white; }
+    .Unaccepted { background-color: #dc3545; color: white; }
+
+    .nav-tabs {
+      display: flex;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .nav-tabs li {
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    .nav-tabs li.active {
+      border-bottom: 3px solid #28a745;
+      font-weight: bold;
+    }
+
+    .unread-badge {
+      display: inline-block;
+      background-color: #dc3545;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      text-align: center;
+      line-height: 20px;
+      font-size: 12px;
+      margin-left: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>বার্তা আদান-প্রদান</h1>
+  </div>
+
+  <div class="nav-tabs">
+    <li><a href="{{ url_for('admin') }}" style="text-decoration: none; color: inherit;">আবেদনকারীদের তালিকা</a></li>
+    <li class="active">বার্তা আদান-প্রদান</li>
+  </div>
+
+  <div class="admin-container">
+    <div class="students-list" id="studentsList">
+      <h3>আবেদনকারীদের তালিকা</h3>
+      <!-- Students will be populated here by JavaScript -->
+    </div>
+
+    <div class="chat-box" id="chatBox">
+      <div class="no-student-selected" id="noStudentSelected">
+        <h3>বার্তালাপ দেখতে বাম পাশ থেকে একজন আবেদনকারী নির্বাচন করুন</h3>
+        <p>এখানে তাদের সাথে বার্তা আদান-প্রদান হবে</p>
+      </div>
+
+      <div id="activeChat" style="display: none; height: 100%; display: flex; flex-direction: column;">
+        <div class="chat-header" id="chatHeader">
+          <!-- Student name and details will be populated here -->
+        </div>
+
+        <div class="messages-container" id="messagesContainer">
+          <!-- Messages will be populated here -->
+        </div>
+
+        <div class="input-area">
+          <textarea id="messageInput" placeholder="আপনার বার্তা লিখুন..."></textarea>
+          <button onclick="sendMessage()">পাঠান</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let students = [];
+    let currentStudentId = null;
+    let messages = {};
+    let unreadMessages = {};
+
+    // Fetch students data
+    function fetchStudents() {
+      fetch('/data')
+        .then(res => res.json())
+        .then(data => {
+          students = data;
+          populateStudentsList();
+        });
+    }
+
+    // Populate the students list
+    function populateStudentsList() {
+      const studentsList = document.getElementById('studentsList');
+      let listHtml = '<h3>আবেদনকারীদের তালিকা</h3>';
+
+      students.forEach((student, index) => {
+        if (student.application_id) {
+          const isActive = currentStudentId === student.application_id;
+          const unreadCount = unreadMessages[student.application_id] || 0;
+          const unreadBadge = unreadCount > 0 ? `<span class="unread-badge">${unreadCount}</span>` : '';
+
+          listHtml += `
+            <div class="student-item ${isActive ? 'active' : ''}" onclick="selectStudent('${student.application_id}')">
+              <div class="student-name">
+                ${student.name}
+                <span class="status-badge ${student.status}">${student.status}</span>
+                ${unreadBadge}
+              </div>
+              <div class="student-info">ID: ${student.application_id}</div>
+              <div class="student-info">Class: ${student.class}</div>
+            </div>
+          `;
+        }
+      });
+
+      studentsList.innerHTML = listHtml;
+    }
+
+    // Select a student to chat with
+    function selectStudent(applicationId) {
+      currentStudentId = applicationId;
+      unreadMessages[applicationId] = 0;
+
+      // Update the active state in the list
+      populateStudentsList();
+
+      // Show the active chat and hide the placeholder
+      document.getElementById('noStudentSelected').style.display = 'none';
+      document.getElementById('activeChat').style.display = 'flex';
+
+      // Find the student data
+      const student = students.find(s => s.application_id === applicationId);
+
+      // Update the chat header
+      const chatHeader = document.getElementById('chatHeader');
+      chatHeader.innerHTML = `
+        <h2>
+          ${student.name}
+          <span class="status-badge ${student.status}">${student.status}</span>
+        </h2>
+        <div class="student-details">
+          <div>Class: ${student.class}</div>
+          <div>Phone: ${student.phone}</div>
+          <div>Application ID: ${applicationId}</div>
+        </div>
+      `;
+
+      // Load the messages
+      loadMessages(applicationId);
+    }
+
+    // Load messages for a student
+    function loadMessages(applicationId) {
+      fetch(`/get-messages/${applicationId}`)
+        .then(res => res.json())
+        .then(data => {
+          messages = data;
+          displayMessages();
+        });
+    }
+
+    // Display messages in the chat
+    function displayMessages() {
+      const messagesContainer = document.getElementById('messagesContainer');
+
+      if (messages.length === 0) {
+        messagesContainer.innerHTML = '<div style="text-align: center; color: #777; padding: 20px;">কোন বার্তা নেই</div>';
+        return;
+      }
+
+      let messagesHtml = '';
+
+      messages.forEach(message => {
+        const messageClass = message.sent_by === 'admin' ? 'admin-message' : 'applicant-message';
+
+        messagesHtml += `
+          <div class="message ${messageClass}">
+            ${message.text}
+            <div class="message-time">${message.timestamp}</div>
+          </div>
+        `;
+      });
+
+      messagesContainer.innerHTML = messagesHtml;
+
+      // Scroll to the bottom
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Send a message
+    function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const message = messageInput.value.trim();
+
+      if (!message || !currentStudentId) return;
+
+      fetch('/admin-send-message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          application_id: currentStudentId,
+          message: message
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Add the message to the local array
+          messages.push(data.message);
+
+          // Display messages
+          displayMessages();
+
+          // Clear input
+          messageInput.value = '';
+        }
+      });
+    }
+
+    // Check for new messages periodically
+    function checkForNewMessages() {
+      // For each student with an application ID
+      students.forEach(student => {
+        if (student.application_id) {
+          fetch(`/get-messages/${student.application_id}`)
+            .then(res => res.json())
+            .then(data => {
+              // If this is the current student, update the messages
+              if (student.application_id === currentStudentId) {
+                const oldLength = messages.length;
+                messages = data;
+
+                if (data.length > oldLength) {
+                  displayMessages();
+                }
+              } else {
+                // Check for unread messages
+                const newMessages = data.filter(m => m.sent_by === 'applicant');
+
+                // If we don't have this student's messages cached yet
+                if (!messages[student.application_id]) {
+                  messages[student.application_id] = data;
+                  unreadMessages[student.application_id] = newMessages.length;
+                } else {
+                  // Check if there are new messages
+                  const cachedMessages = messages[student.application_id].filter(m => m.sent_by === 'applicant');
+                  if (newMessages.length > cachedMessages.length) {
+                    unreadMessages[student.application_id] = newMessages.length - cachedMessages.length;
+                    messages[student.application_id] = data;
+                  }
+                }
+              }
+
+              // Update the students list to show unread counts
+              populateStudentsList();
+            });
+        }
+      });
+    }
+
+    // Initialize
+    fetchStudents();
+
+    // Set up polling for new messages
+    setInterval(checkForNewMessages, 5000);
+
+    // Listen for Enter key in message input
+    document.getElementById('messageInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>

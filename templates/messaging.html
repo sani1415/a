@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>বার্তা আদান-প্রদান - মাদ্রাসাতুল মাদিনাহ</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .chat-container {
+      max-width: 800px;
+      margin: 20px auto;
+      background-color: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background-color: #a8e6a1;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chat-header h2 {
+      margin: 0;
+      color: #333;
+    }
+
+    .logout-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .chat-history {
+      height: 400px;
+      overflow-y: auto;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .message {
+      max-width: 70%;
+      margin-bottom: 15px;
+      padding: 10px 15px;
+      border-radius: 15px;
+      position: relative;
+    }
+
+    .admin-message {
+      background-color: #e8f5e9;
+      align-self: flex-start;
+      border-bottom-left-radius: 5px;
+    }
+
+    .applicant-message {
+      background-color: #dcf8c6;
+      align-self: flex-end;
+      border-bottom-right-radius: 5px;
+    }
+
+    .message-time {
+      font-size: 11px;
+      color: #888;
+      margin-top: 5px;
+    }
+
+    .chat-input {
+      padding: 15px;
+      border-top: 1px solid #ddd;
+      display: flex;
+    }
+
+    .chat-input input {
+      flex-grow: 1;
+      border: 1px solid #ddd;
+      border-radius: 30px;
+      padding: 10px 15px;
+      margin-right: 10px;
+    }
+
+    .chat-input button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    .no-messages {
+      text-align: center;
+      color: #777;
+      padding: 20px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 15px;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+
+    .Processing { background-color: #ffc107; color: black; }
+    .Accepted { background-color: #28a745; color: white; }
+    .Unaccepted { background-color: #dc3545; color: white; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>বার্তা আদান-প্রদান</h1>
+  </div>
+
+  <div class="chat-container">
+    <div class="chat-header">
+      <h2>
+        {{ student.name }}
+        <span class="status-badge {{ student.status }}">{{ student.status }}</span>
+      </h2>
+      <a href="{{ url_for('logout') }}" class="logout-btn">লগআউট</a>
+    </div>
+
+    <div class="chat-history" id="chatHistory">
+      {% if messages %}
+        {% for message in messages %}
+          {% if message.sent_by == 'admin' %}
+            <div class="message admin-message">
+              {{ message.text }}
+              <div class="message-time">{{ message.timestamp }}</div>
+            </div>
+          {% else %}
+            <div class="message applicant-message">
+              {{ message.text }}
+              <div class="message-time">{{ message.timestamp }}</div>
+            </div>
+          {% endif %}
+        {% endfor %}
+      {% else %}
+        <div class="no-messages">কোন বার্তা নেই। আপনার প্রথম বার্তা পাঠান!</div>
+      {% endif %}
+    </div>
+
+    <div class="chat-input">
+      <input type="text" id="messageInput" placeholder="আপনার বার্তা লিখুন...">
+      <button onclick="sendMessage()">পাঠান</button>
+    </div>
+  </div>
+
+  <script>
+    function scrollToBottom() {
+      const chatHistory = document.getElementById('chatHistory');
+      chatHistory.scrollTop = chatHistory.scrollHeight;
+    }
+
+    // Scroll to bottom on page load
+    window.onload = scrollToBottom;
+
+    function sendMessage() {
+      const messageInput = document.getElementById('messageInput');
+      const message = messageInput.value.trim();
+
+      if (!message) return;
+
+      // Send message to server
+      fetch('{{ url_for("send_message") }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: message })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Add message to chat
+          const chatHistory = document.getElementById('chatHistory');
+
+          // Remove "no messages" div if it exists
+          const noMessages = document.querySelector('.no-messages');
+          if (noMessages) {
+            noMessages.remove();
+          }
+
+          const messageDiv = document.createElement('div');
+          messageDiv.className = 'message applicant-message';
+          messageDiv.innerHTML = `
+            ${data.message.text}
+            <div class="message-time">${data.message.timestamp}</div>
+          `;
+
+          chatHistory.appendChild(messageDiv);
+          scrollToBottom();
+
+          // Clear input
+          messageInput.value = '';
+        }
+      });
+    }
+
+    // Listen for Enter key in message input
+    document.getElementById('messageInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+
+    // Check for new messages every 5 seconds
+    setInterval(function() {
+      fetch(window.location.href)
+        .then(response => response.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const doc = parser.parseFromString(html, 'text/html');
+          const newChatHistory = doc.getElementById('chatHistory').innerHTML;
+          document.getElementById('chatHistory').innerHTML = newChatHistory;
+          scrollToBottom();
+        });
+    }, 5000);
+  </script>
+</body>
+</html>

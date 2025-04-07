@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>আবেদনকারী লগইন - মাদ্রাসাতুল মাদিনাহ</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .login-container {
+      max-width: 400px;
+      margin: 30px auto;
+      background-color: #ffffff;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      text-align: left;
+    }
+    .error-message {
+      color: #dc3545;
+      margin-bottom: 15px;
+      font-weight: bold;
+      text-align: center;
+    }
+    .login-title {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>আবেদনকারী লগইন</h1>
+  </div>
+
+  <div class="login-container">
+    <h2 class="login-title">আপনার অ্যাপ্লিকেশন আইডি এবং পাসওয়ার্ড দিয়ে লগইন করুন</h2>
+
+    {% if error %}
+    <div class="error-message">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('applicant_login') }}">
+      <label for="application_id">অ্যাপ্লিকেশন আইডি:</label>
+      <input type="text" id="application_id" name="application_id" required>
+
+      <label for="password">পাসওয়ার্ড:</label>
+      <input type="password" id="password" name="password" required>
+
+      <button type="submit">লগইন করুন</button>
+    </form>
+  </div>
+</body>
+</html>
