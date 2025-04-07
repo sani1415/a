@@ -1,4 +1,3 @@
-
 [
   {
     "name": "Ahmad Bin Yusuf",
@@ -7,7 +6,7 @@
     "guardian": "Yusuf Ali",
     "phone": "01712345678",
     "address": "Mirpur, Dhaka",
-    "status": "Processing"
+    "status": "Accepted"
   },
   {
     "name": "আবদুল্লাহ",
@@ -34,7 +33,7 @@
     "guardian": "মাহমুদ",
     "phone": "০১৮৭৭৬৩৫৬৭৯",
     "address": "ঢাকা",
-    "status": "Processing"
+    "status": "Unaccepted"
   },
   {
     "name": "Vfgg",
