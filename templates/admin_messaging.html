@@ -231,7 +231,8 @@
   <script>
     let students = [];
     let currentStudentId = null;
-    let messages = {};
+    let activeMessages = []; // Current student's messages
+    let studentMessages = {}; // All students' messages stored by ID
     let unreadMessages = {};
 
     // Fetch students data
@@ -310,7 +311,8 @@
       fetch(`/get-messages/${applicationId}`)
         .then(res => res.json())
         .then(data => {
-          messages = data;
+          activeMessages = data;
+          studentMessages[applicationId] = data;
           displayMessages();
         });
     }
@@ -319,14 +321,14 @@
     function displayMessages() {
       const messagesContainer = document.getElementById('messagesContainer');
 
-      if (messages.length === 0) {
+      if (activeMessages.length === 0) {
         messagesContainer.innerHTML = '<div style="text-align: center; color: #777; padding: 20px;">কোন বার্তা নেই</div>';
         return;
       }
 
       let messagesHtml = '';
 
-      messages.forEach(message => {
+      activeMessages.forEach(message => {
         const messageClass = message.sent_by === 'admin' ? 'admin-message' : 'applicant-message';
 
         messagesHtml += `
@@ -364,7 +366,8 @@
       .then(data => {
         if (data.success) {
           // Add the message to the local array
-          messages.push(data.message);
+          activeMessages.push(data.message);
+          studentMessages[currentStudentId] = activeMessages;
 
           // Display messages
           displayMessages();
@@ -385,8 +388,9 @@
             .then(data => {
               // If this is the current student, update the messages
               if (student.application_id === currentStudentId) {
-                const oldLength = messages.length;
-                messages = data;
+                const oldLength = activeMessages.length;
+                activeMessages = data;
+                studentMessages[student.application_id] = data;
 
                 if (data.length > oldLength) {
                   displayMessages();
@@ -394,17 +398,19 @@
               } else {
                 // Check for unread messages
                 const newMessages = data.filter(m => m.sent_by === 'applicant');
-
+                
                 // If we don't have this student's messages cached yet
-                if (!messages[student.application_id]) {
-                  messages[student.application_id] = data;
+                if (!studentMessages[student.application_id]) {
+                  studentMessages[student.application_id] = data;
                   unreadMessages[student.application_id] = newMessages.length;
                 } else {
-                  // Check if there are new messages
-                  const cachedMessages = messages[student.application_id].filter(m => m.sent_by === 'applicant');
+                  const cachedMessages = studentMessages[student.application_id].filter(m => m.sent_by === 'applicant');
+                  
+                  // If there are new applicant messages
                   if (newMessages.length > cachedMessages.length) {
-                    unreadMessages[student.application_id] = newMessages.length - cachedMessages.length;
-                    messages[student.application_id] = data;
+                    unreadMessages[student.application_id] = unreadMessages[student.application_id] || 0;
+                    unreadMessages[student.application_id] += (newMessages.length - cachedMessages.length);
+                    studentMessages[student.application_id] = data;
                   }
                 }
               }

@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 import json
 import os
@@ -335,13 +334,13 @@ def admin_messaging():
 @app.route('/print')
 def print_student():
     index = request.args.get('index', type=int)
-    
+
     with open('data.json', 'r', encoding='utf-8') as f:
         students = json.load(f)
-    
+
     if index is None or index < 0 or index >= len(students):
         return "Invalid student index"
-    
+
     student = students[index]
     return render_template('print.html', student=student)
 

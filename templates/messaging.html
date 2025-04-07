@@ -215,14 +215,43 @@
 
     // Check for new messages every 5 seconds
     setInterval(function() {
-      fetch(window.location.href)
-        .then(response => response.text())
-        .then(html => {
-          const parser = new DOMParser();
-          const doc = parser.parseFromString(html, 'text/html');
-          const newChatHistory = doc.getElementById('chatHistory').innerHTML;
-          document.getElementById('chatHistory').innerHTML = newChatHistory;
-          scrollToBottom();
+      fetch('/get-messages/{{ session.application_id }}')
+        .then(response => response.json())
+        .then(messages => {
+          const chatHistory = document.getElementById('chatHistory');
+          
+          // Count current messages
+          const currentMessageCount = chatHistory.querySelectorAll('.message').length;
+          
+          // If there are new messages
+          if (messages.length > currentMessageCount) {
+            let messagesHtml = '';
+            
+            if (messages.length === 0) {
+              messagesHtml = '<div class="no-messages">কোন বার্তা নেই। আপনার প্রথম বার্তা পাঠান!</div>';
+            } else {
+              messages.forEach(message => {
+                if (message.sent_by === 'admin') {
+                  messagesHtml += `
+                    <div class="message admin-message">
+                      ${message.text}
+                      <div class="message-time">${message.timestamp}</div>
+                    </div>
+                  `;
+                } else {
+                  messagesHtml += `
+                    <div class="message applicant-message">
+                      ${message.text}
+                      <div class="message-time">${message.timestamp}</div>
+                    </div>
+                  `;
+                }
+              });
+            }
+            
+            chatHistory.innerHTML = messagesHtml;
+            scrollToBottom();
+          }
         });
     }, 5000);
   </script>
