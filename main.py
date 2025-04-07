@@ -1,95 +1,108 @@
-        from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
-        import json
-        import os
-        import openpyxl
-        from io import BytesIO
-        from datetime import datetime
-        import random
-        import string
-        import hashlib
 
-        app = Flask(__name__, static_folder='static')
-        app.secret_key = 'madrasatul_madinah_secret_key'  # Required for session
+from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
+import json
+import os
+import openpyxl
+from io import BytesIO
+from datetime import datetime
+import random
+import string
+import hashlib
 
-        # Generate a unique ID and password
-        def generate_credentials():
-            # Generate a 6-digit application ID
-            application_id = ''.join(random.choices(string.digits, k=6))
+app = Flask(__name__, static_folder='static')
+app.secret_key = 'madrasatul_madinah_secret_key'  # Required for session
 
-            # Generate a simple 8-character password
-            password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+# Generate a unique ID and password
+def generate_credentials():
+    # Generate a 6-digit application ID
+    application_id = ''.join(random.choices(string.digits, k=6))
 
-            # Hash the password for storage
-            hashed_password = hashlib.md5(password.encode()).hexdigest()
+    # Generate a simple 8-character password
+    password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
 
-            return application_id, password, hashed_password
+    # Hash the password for storage
+    hashed_password = hashlib.md5(password.encode()).hexdigest()
 
-        @app.route('/submit', methods=['POST'])
-        def submit():
-            # Generate credentials
-            application_id, password, hashed_password = generate_credentials()
+    return application_id, password, hashed_password
 
-            data = {
-                'name': request.form.get('name'),
-                'birth': request.form.get('birth'),
-                'class': request.form.get('class'),
-                'guardian': request.form.get('guardian'),
-                'phone': request.form.get('phone'),
-                'address': request.form.get('address'),
-                'status': 'Processing',
-                'submitted_at': datetime.now().strftime('%Y-%m-%d %I:%M %p'),
-                'application_id': application_id,
-                'password_hash': hashed_password,
-            }
+@app.route('/submit', methods=['POST'])
+def submit():
+    # Generate credentials
+    application_id, password, hashed_password = generate_credentials()
 
-            # Save uploaded image
-            image = request.files.get('photo')
-            if image:
-                upload_folder = os.path.join('static', 'uploads')
-                os.makedirs(upload_folder, exist_ok=True)
-                filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{image.filename}"
-                filepath = os.path.join(upload_folder, filename)
-                image.save(filepath)
-                data['photo'] = filename
-            else:
-                return jsonify({"error": "Photo is required"}), 400
+    data = {
+        'name': request.form.get('name'),
+        'birth': request.form.get('birth'),
+        'class': request.form.get('class'),
+        'guardian': request.form.get('guardian'),
+        'phone': request.form.get('phone'),
+        'address': request.form.get('address'),
+        'status': 'Processing',
+        'submitted_at': datetime.now().strftime('%Y-%m-%d %I:%M %p'),
+        'application_id': application_id,
+        'password_hash': hashed_password,
+    }
 
-            try:
-                if not os.path.exists('data.json'):
-                    with open('data.json', 'w', encoding='utf-8') as f:
-                        json.dump([], f)
+    # Save uploaded image
+    image = request.files.get('photo')
+    if image:
+        upload_folder = os.path.join('static', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{image.filename}"
+        filepath = os.path.join(upload_folder, filename)
+        image.save(filepath)
+        data['photo'] = filename
+    else:
+        return jsonify({"error": "Photo is required"}), 400
 
-                with open('data.json', 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    current_data = json.loads(content) if content.strip() else []
+    try:
+        if not os.path.exists('data.json'):
+            with open('data.json', 'w', encoding='utf-8') as f:
+                json.dump([], f)
 
-                current_data.append(data)
+        with open('data.json', 'r', encoding='utf-8') as f:
+            content = f.read()
+            current_data = json.loads(content) if content.strip() else []
 
-                with open('data.json', 'w', encoding='utf-8') as f:
-                    json.dump(current_data, f, ensure_ascii=False, indent=2)
+        current_data.append(data)
 
-                # Create empty message history for this applicant
-                if not os.path.exists('messages.json'):
-                    with open('messages.json', 'w', encoding='utf-8') as f:
-                        json.dump({}, f)
+        with open('data.json', 'w', encoding='utf-8') as f:
+            json.dump(current_data, f, ensure_ascii=False, indent=2)
 
-                with open('messages.json', 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    messages = json.loads(content) if content.strip() else {}
+        # Create empty message history for this applicant
+        if not os.path.exists('messages.json'):
+            with open('messages.json', 'w', encoding='utf-8') as f:
+                json.dump({}, f)
 
-                messages[application_id] = []
+        with open('messages.json', 'r', encoding='utf-8') as f:
+            content = f.read()
+            messages = json.loads(content) if content.strip() else {}
 
-                with open('messages.json', 'w', encoding='utf-8') as f:
-                    json.dump(messages, f, ensure_ascii=False, indent=2)
+        messages[application_id] = []
 
-                # Return success with credentials
-                return jsonify({
-                    "message": "Data saved successfully", 
-                    "application_id": application_id, 
-                    "password": password
-                })
-            except Exception as e:
-                return jsonify({"error": str(e)}), 500
+        with open('messages.json', 'w', encoding='utf-8') as f:
+            json.dump(messages, f, ensure_ascii=False, indent=2)
+
+        # Return success with credentials
+        return jsonify({
+            "message": "Data saved successfully", 
+            "application_id": application_id, 
+            "password": password
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/')
+def home():
+    return render_template('index.html')
+
+@app.route('/form')
+def form():
+    return render_template('form.html')
+
+@app.route('/admin')
+def admin():
+    return render_template('admin.html')
 
 @app.route('/data')
 def data():
@@ -317,5 +330,20 @@ def logout():
 
 @app.route('/admin-messaging')
 def admin_messaging():
-    return render_template('admin_messaging.html')    
-app.run(host='0.0.0.0', port=81)
+    return render_template('admin_messaging.html')
+
+@app.route('/print')
+def print_student():
+    index = request.args.get('index', type=int)
+    
+    with open('data.json', 'r', encoding='utf-8') as f:
+        students = json.load(f)
+    
+    if index is None or index < 0 or index >= len(students):
+        return "Invalid student index"
+    
+    student = students[index]
+    return render_template('print.html', student=student)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=81)
