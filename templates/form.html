@@ -38,6 +38,9 @@
       <label for="address">ছাত্রের ঠিকানা:</label>
       <textarea id="address" name="address" rows="3" required></textarea>
 
+      <label for="photo">ছাত্রের ছবি:</label>
+      <input type="file" id="photo" name="photo" accept="image/*" required>
+
       <button type="submit">আবেদন জমা দিন</button>
     </form>
   </div>
@@ -47,22 +50,11 @@
       event.preventDefault();
 
       const form = document.getElementById('admissionForm');
-
-      const formData = {
-        name: form.name.value,
-        birth: form.birth.value,
-        class: form.class.value,
-        guardian: form.guardian.value,
-        phone: form.phone.value,
-        address: form.address.value
-      };
+      const formData = new FormData(form);
 
       fetch('{{ url_for("submit") }}', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(formData)
+        body: formData
       })
       .then(res => res.json())
       .then(response => {

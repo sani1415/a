@@ -390,8 +390,26 @@
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ status: newStatus })
       })
-      .then(() => fetchData());
+      .then(() => {
+        // Re-fetch both logs and student data
+        fetch('/status-log')
+          .then(res => res.json())
+          .then(logData => {
+            logs = logData;
+            fetchData();
+          });
+      });
     }
+
+    // Auto-refresh every 30 seconds
+    setInterval(() => {
+      fetch('/status-log')
+        .then(res => res.json())
+        .then(logData => {
+          logs = logData;
+          fetchData();
+        });
+    }, 30000);
 
     function printStudent(index) {
       window.open(`/print?index=${index}`, '_blank');
