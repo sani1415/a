@@ -63,10 +63,40 @@
         confirmation.innerHTML = `
           <h2>আপনার আবেদন সফলভাবে জমা হয়েছে!</h2>
           <p>আমরা খুব শীঘ্রই আপনার সাথে যোগাযোগ করব ইনশাআল্লাহ।</p>
+          <div class="credentials-box">
+            <h3>আপনার লগইন তথ্য:</h3>
+            <p><strong>অ্যাপ্লিকেশন আইডি:</strong> ${response.application_id}</p>
+            <p><strong>পাসওয়ার্ড:</strong> ${response.password}</p>
+            <p style="color:red; font-weight:bold">দয়া করে এই তথ্য সংরক্ষণ করুন!</p>
+          </div>
         `;
         confirmation.style.textAlign = 'center';
         confirmation.style.marginTop = '20px';
+        
+        // Style for credentials box
+        const style = document.createElement('style');
+        style.textContent = `
+          .credentials-box {
+            margin-top: 20px;
+            border: 2px dashed #28a745;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+          }
+          .credentials-box h3 {
+            margin-top: 0;
+            color: #28a745;
+          }
+        `;
+        document.head.appendChild(style);
+        
         document.querySelector('.form-container').appendChild(confirmation);
+      })
+      .catch(error => {
+        alert('Error submitting form: ' + error);
       });
     }
   </script>
