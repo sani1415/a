@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>অ্যাডমিন প্যানেল - আবেদনকারীদের তালিকা</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    table {
+      width: 95%;
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+      vertical-align: top;
+    }
+    th {
+      background-color: #a8e6a1;
+    }
+    .status {
+      font-weight: bold;
+      padding: 5px 10px;
+      border-radius: 5px;
+    }
+    .Processing { background-color: #ffc107; color: black; }
+    .Accepted { background-color: #28a745; color: white; }
+    .Unaccepted { background-color: #dc3545; color: white; }
+
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #f1f1f1;
+      min-width: 120px;
+      box-shadow: 0px 8px 16px rgba(0,0,0,0.2);
+      z-index: 1;
+    }
+
+    .dropdown-content div {
+      color: black;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .dropdown-content div:hover {
+      background-color: #ddd;
+    }
+
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+
+    .history {
+      font-size: 13px;
+      margin-top: 6px;
+      text-align: left;
+      background: #f9f9f9;
+      padding: 6px;
+      border-radius: 4px;
+      display: none;
+    }
+
+    .history-entry {
+      margin: 2px 0;
+      font-style: italic;
+    }
+
+    .view-history-btn {
+      margin-top: 5px;
+      font-size: 12px;
+      color: #007bff;
+      cursor: pointer;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>নিবন্ধিত আবেদনকারীদের তালিকা</h1>
+  </div>
+
+  <div class="top-bar">
+    <div></div>
+    <a href="/export-excel" class="export-btn" download>📥 Export to Excel</a>
+  </div>
+
+  <table id="dataTable">
+    <thead>
+      <tr>
+        <th>নাম</th>
+        <th>জন্ম তারিখ</th>
+        <th>শ্রেণি</th>
+        <th>অভিভাবক</th>
+        <th>মোবাইল</th>
+        <th>ঠিকানা</th>
+        <th>স্ট্যাটাস</th>
+        <th>প্রিন্ট</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    let logs = {};
+
+    // First fetch logs
+    fetch('/status-log')
+      .then(res => res.json())
+      .then(logData => {
+        logs = logData;
+        fetchData(); // Now fetch students
+      });
+
+    function fetchData() {
+      fetch('/data')
+        .then(res => res.json())
+        .then(data => {
+          const tbody = document.querySelector("#dataTable tbody");
+          tbody.innerHTML = "";
+
+          data.forEach((student, index) => {
+            const row = document.createElement("tr");
+            const logEntries = logs.filter(l => l.index === index);
+
+            let historyHTML = "";
+            logEntries.forEach(log => {
+              historyHTML += `<div class="history-entry">Status changed to "<b>${log.status}</b>" on ${log.timestamp}</div>`;
+            });
+
+            row.innerHTML = `
+              <td>${student.name}</td>
+              <td>${student.birth}</td>
+              <td>${student.class}</td>
+              <td>${student.guardian}</td>
+              <td>${student.phone}</td>
+              <td>${student.address}</td>
+              <td>
+                <span class="status ${student.status}">${student.status}</span>
+                <div class="dropdown">
+                  <span style="cursor:pointer;">⋮</span>
+                  <div class="dropdown-content">
+                    <div onclick="updateStatus(${index}, 'Processing')">⏳ Processing</div>
+                    <div onclick="updateStatus(${index}, 'Accepted')">✅ Accepted</div>
+                    <div onclick="updateStatus(${index}, 'Unaccepted')">❌ Unaccepted</div>
+                  </div>
+                </div>
+                <div class="view-history-btn" onclick="toggleHistory(this)">📜 View History</div>
+                <div class="history">${historyHTML}</div>
+              </td>
+              <td><button onclick="printStudent(${index})">প্রিন্ট</button></td>
+            `;
+
+            tbody.appendChild(row);
+          });
+        });
+    }
+
+    function toggleHistory(el) {
+      const historyBox = el.nextElementSibling;
+      historyBox.style.display = historyBox.style.display === "block" ? "none" : "block";
+    }
+
+    function updateStatus(index, newStatus) {
+      fetch(`/update-status/${index}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ status: newStatus })
+      })
+      .then(res => res.json())
+      .then(data => {
+        fetchData(); // reload table with updated status + logs
+      });
+    }
+
+    function printStudent(index) {
+      window.open(`/print?index=${index}`, '_blank');
+    }
+  </script>
+</body>
+</html>

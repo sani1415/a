@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>মাদ্রাসাতুল মাদিনাহ</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="header">
+    <h1>মাদ্রাসাতুল মাদিনাহ</h1>
+  </div>
+
+  <div class="image-section">
+    <img src="{{ url_for('static', filename='madrasa.jpg') }}" alt="মাদ্রাসার ছবি">
+  </div>
+
+  <div class="intro-section">
+    <p>
+      মাদ্রাসাতুল মাদিনাহ একটি ধর্মীয় শিক্ষাপ্রতিষ্ঠান জেখানে কুরআন-সুন্নাহভিত্তিক শিক্ষা প্রদান করা হয়। <br>
+      ছোট-বড় সকল ছাত্রদের জন্য এখানে রয়েছে মানসম্পন্ন পাঠদানের ব্যবস্থারী।
+    </p>
+  </div>
+
+  <div class="button-section">
+    <a href="{{ url_for('form') }}" class="apply-button">অনলাইনে ভর্তি আবেদন</a>
+  </div>
+</body>
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>ছাত্রের আবেদন প্রিন্ট</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    .print-container {
+      max-width: 600px;
+      margin: 30px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+    }
+    .print-container h2 {
+      text-align: center;
+      color: #2c3e50;
+    }
+    .print-container p {
+      font-size: 18px;
+      line-height: 1.7;
+    }
+    .print-button {
+      margin-top: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="print-container" id="printArea">
+    <h2>আবেদনকারীর তথ্য</h2>
+    <div id="details"></div>
+    <div class="print-button">
+      <button onclick="window.print()">প্রিন্ট করুন</button>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const index = parseInt(params.get("index"));
+
+    fetch('/data')
+      .then(res => res.json())
+      .then(data => {
+        const student = data[index];
+        const html = `
+          <p><strong>নাম:</strong> ${student.name}</p>
+          <p><strong>জন্ম তারিখ:</strong> ${student.birth}</p>
+          <p><strong>ভর্তির শ্রেণি:</strong> ${student.class}</p>
+          <p><strong>অভিভাবক:</strong> ${student.guardian}</p>
+          <p><strong>মোবাইল:</strong> ${student.phone}</p>
+          <p><strong>ঠিকানা:</strong> ${student.address}</p>
+        `;
+        document.getElementById('details').innerHTML = html;
+      });
+  </script>
+</body>
+</html>

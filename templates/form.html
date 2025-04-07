@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ভর্তি ফর্ম - মাদ্রাসাতুল মাদিনাহ</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="header">
+    <h1>ভর্তি আবেদন ফর্ম</h1>
+  </div>
+
+  <div class="form-container">
+    <form id="admissionForm" onsubmit="showConfirmation(event)">
+      <label for="name">ছাত্রের নাম:</label>
+      <input type="text" id="name" name="name" required>
+
+      <label for="birth">জন্ম তারিখ:</label>
+      <input type="date" id="birth" name="birth" required>
+
+      <label for="class">ভর্তির শ্রেণি:</label>
+      <select id="class" name="class" required>
+        <option value="">-- নির্বাচন করুন --</option>
+        <option value="নূরানী">নূরানী</option>
+        <option value="নাজেরা">নাজেরা</option>
+        <option value="হিফজ">হিফজ</option>
+        <option value="কিতাব">কিতাব</option>
+      </select>
+
+      <label for="guardian">অভিভাবকের নাম:</label>
+      <input type="text" id="guardian" name="guardian" required>
+
+      <label for="phone">অভিভাবকের মোবাইল নম্বর:</label>
+      <input type="tel" id="phone" name="phone" required>
+
+      <label for="address">ছাত্রের ঠিকানা:</label>
+      <textarea id="address" name="address" rows="3" required></textarea>
+
+      <button type="submit">আবেদন জমা দিন</button>
+    </form>
+  </div>
+
+  <script>
+    function showConfirmation(event) {
+      event.preventDefault();
+
+      const form = document.getElementById('admissionForm');
+
+      const formData = {
+        name: form.name.value,
+        birth: form.birth.value,
+        class: form.class.value,
+        guardian: form.guardian.value,
+        phone: form.phone.value,
+        address: form.address.value
+      };
+
+      fetch('{{ url_for("submit") }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+      })
+      .then(res => res.json())
+      .then(response => {
+        form.style.display = 'none';
+        const confirmation = document.createElement('div');
+        confirmation.innerHTML = `
+          <h2>আপনার আবেদন সফলভাবে জমা হয়েছে!</h2>
+          <p>আমরা খুব শীঘ্রই আপনার সাথে যোগাযোগ করব ইনশাআল্লাহ।</p>
+        `;
+        confirmation.style.textAlign = 'center';
+        confirmation.style.marginTop = '20px';
+        document.querySelector('.form-container').appendChild(confirmation);
+      });
+    }
+  </script>
+</body>
+</html>
