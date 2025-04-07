@@ -25,21 +25,37 @@ def print_page():
 
 @app.route('/submit', methods=['POST'])
 def submit():
-    data = request.json
-    data['status'] = 'Processing'  # Default status
+    data = {
+        'name': request.form.get('name'),
+        'birth': request.form.get('birth'),
+        'class': request.form.get('class'),
+        'guardian': request.form.get('guardian'),
+        'phone': request.form.get('phone'),
+        'address': request.form.get('address'),
+        'status': 'Processing',
+        'submitted_at': datetime.now().strftime('%Y-%m-%d %I:%M %p'),
+    }
+
+    # Save uploaded image
+    image = request.files.get('photo')
+    if image:
+        upload_folder = os.path.join('static', 'uploads')
+        os.makedirs(upload_folder, exist_ok=True)
+        filename = f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{image.filename}"
+        filepath = os.path.join(upload_folder, filename)
+        image.save(filepath)
+        data['photo'] = filename
+    else:
+        return jsonify({"error": "Photo is required"}), 400
 
     try:
         if not os.path.exists('data.json'):
             with open('data.json', 'w', encoding='utf-8') as f:
                 json.dump([], f)
 
-        try:
-            with open('data.json', 'r', encoding='utf-8') as f:
-                content = f.read()
-                current_data = json.loads(content) if content.strip() else []
-        except json.JSONDecodeError:
-            # If JSON is invalid, start with an empty list
-            current_data = []
+        with open('data.json', 'r', encoding='utf-8') as f:
+            content = f.read()
+            current_data = json.loads(content) if content.strip() else []
 
         current_data.append(data)
 
@@ -72,7 +88,6 @@ def update_status(index):
     with open('data.json', 'w', encoding='utf-8') as f:
         json.dump(students, f, ensure_ascii=False, indent=2)
 
-    # Log status change
     log_entry = {
         'index': index,
         'status': new_status,
@@ -137,7 +152,7 @@ def status_log():
             with open('status_log.json', 'w', encoding='utf-8') as f:
                 json.dump([], f)
             return jsonify([])
-            
+
         with open('status_log.json', 'r', encoding='utf-8') as f:
             content = f.read()
             logs = json.loads(content) if content.strip() else []

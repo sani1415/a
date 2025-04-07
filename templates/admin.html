@@ -5,6 +5,7 @@
   <title>অ্যাডমিন প্যানেল - আবেদনকারীদের তালিকা</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <style>
+    /* Your previous CSS (kept intact, including your dashboard improvements) */
     table {
       width: 95%;
       margin: 20px auto;
@@ -63,7 +64,7 @@
       background: #f9f9f9;
       padding: 6px;
       border-radius: 4px;
-      display: none; /* Initially hidden, will be toggled by JavaScript */
+      display: none;
     }
 
     .history-entry {
@@ -78,6 +79,123 @@
       cursor: pointer;
       display: inline-block;
     }
+
+    /* Dashboard Boxes */
+    .statistics-panel {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 5px;
+      margin: 20px auto;
+      max-width: 95%;
+    }
+
+    .stat-card {
+      background-color: #ffffff;
+      border-left: 5px solid #4CAF50;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      padding: 12px 18px;
+      width: 60px;
+      text-align: left;
+      transition: transform 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: scale(1.03);
+    }
+
+    .stat-card h3 {
+      font-size: 14px;
+      margin: 0 0 5px;
+      color: #555;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-card p {
+      font-size: 22px;
+      font-weight: bold;
+      margin: 0;
+    }
+
+    #accepted-count { color: #28a745; }
+    #processing-count { color: #ffc107; }
+    #unaccepted-count { color: #dc3545; }
+
+    @media (max-width: 600px) {
+      .stat-card {
+        width: 90%;
+        text-align: center;
+        padding: 15px;
+      }
+      .stat-card h3 {
+        justify-content: center;
+      }
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 20px auto;
+      max-width: 95%;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+    }
+
+    .search-box input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 250px;
+    }
+
+    .filter-options {
+      display: flex;
+      gap: 10px;
+    }
+
+    .filter-options select {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .filter-bar button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 15px;
+      cursor: pointer;
+    }
+
+    .filter-bar button:hover {
+      background-color: #45a049;
+    }
+
+    /* Table Sorting */
+    th.sortable {
+      cursor: pointer;
+      position: relative;
+    }
+
+    th.sortable::after {
+      content: '⇕';
+      position: absolute;
+      right: 8px;
+      color: #999;
+    }
+
+    th.sort-asc::after { content: '↓'; color: #333; }
+    th.sort-desc::after { content: '↑'; color: #333; }
   </style>
 </head>
 <body>
@@ -90,16 +208,58 @@
     <a href="/export-excel" class="export-btn" download>📥 Export to Excel</a>
   </div>
 
+  <div class="statistics-panel">
+    <div class="stat-card">
+      <h3>Applications</h3>
+      <p id="applications">0</p>
+    </div>
+    <div class="stat-card">
+      <h3>Accepted</h3>
+      <p id="accepted-count">0</p>
+    </div>
+    <div class="stat-card">
+      <h3>Processing</h3>
+      <p id="processing-count">0</p>
+    </div>
+    <div class="stat-card">
+      <h3>Unaccepted</h3>
+      <p id="unaccepted-count">0</p>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="নাম বা ফোন নম্বর দিয়ে সার্চ করুন...">
+      <button onclick="searchStudents()">🔍 সার্চ</button>
+    </div>
+    <div class="filter-options">
+      <select id="statusFilter">
+        <option value="all">সব স্ট্যাটাস</option>
+        <option value="Processing">Processing</option>
+        <option value="Accepted">Accepted</option>
+        <option value="Unaccepted">Unaccepted</option>
+      </select>
+      <select id="classFilter">
+        <option value="all">সব শ্রেণি</option>
+        <option value="নূরানী">নূরানী</option>
+        <option value="নাজেরা">নাজেরা</option>
+        <option value="হিফজ">হিফজ</option>
+        <option value="কিতাব">কিতাব</option>
+      </select>
+      <button onclick="applyFilters()">ফিল্টার করুন</button>
+    </div>
+  </div>
+
   <table id="dataTable">
     <thead>
       <tr>
-        <th>নাম</th>
-        <th>জন্ম তারিখ</th>
-        <th>শ্রেণি</th>
-        <th>অভিভাবক</th>
-        <th>মোবাইল</th>
+        <th class="sortable" onclick="sortTable(0)">নাম</th>
+        <th class="sortable" onclick="sortTable(1)">জন্ম তারিখ</th>
+        <th class="sortable" onclick="sortTable(2)">শ্রেণি</th>
+        <th class="sortable" onclick="sortTable(3)">অভিভাবক</th>
+        <th class="sortable" onclick="sortTable(4)">মোবাইল</th>
         <th>ঠিকানা</th>
-        <th>স্ট্যাটাস</th>
+        <th class="sortable" onclick="sortTable(6)">স্ট্যাটাস</th>
         <th>প্রিন্ট</th>
       </tr>
     </thead>
@@ -108,67 +268,109 @@
 
   <script>
     let logs = {};
+    let allStudents = [];
+    let currentSortColumn = -1;
+    let sortDirection = 'asc';
 
-    // First fetch logs
     fetch('/status-log')
       .then(res => res.json())
       .then(logData => {
         logs = logData;
-        console.log("Logs loaded:", logs); // For debugging
-        fetchData(); // Now fetch students
-      })
-      .catch(error => {
-        console.error("Error fetching logs:", error);
-        logs = []; // Use empty logs if there's an error
-        fetchData(); // Still fetch students even if logs fail
+        fetchData();
+      }).catch(() => {
+        logs = [];
+        fetchData();
       });
 
     function fetchData() {
       fetch('/data')
         .then(res => res.json())
         .then(data => {
-          const tbody = document.querySelector("#dataTable tbody");
-          tbody.innerHTML = "";
-
-          data.forEach((student, index) => {
-            const row = document.createElement("tr");
-            const logEntries = logs.filter(l => l.index === index);
-            
-            let historyHTML = "";
-            if (logEntries && logEntries.length > 0) {
-              logEntries.forEach(log => {
-                historyHTML += `<div class="history-entry">Status changed to "<b>${log.status}</b>" on ${log.timestamp}</div>`;
-              });
-            } else {
-              historyHTML = "<div class='history-entry'>No status change history available</div>";
-            }
-
-            row.innerHTML = `
-              <td>${student.name}</td>
-              <td>${student.birth}</td>
-              <td>${student.class}</td>
-              <td>${student.guardian}</td>
-              <td>${student.phone}</td>
-              <td>${student.address}</td>
-              <td>
-                <span class="status ${student.status}">${student.status}</span>
-                <div class="dropdown">
-                  <span style="cursor:pointer;">⋮</span>
-                  <div class="dropdown-content">
-                    <div onclick="updateStatus(${index}, 'Processing')">⏳ Processing</div>
-                    <div onclick="updateStatus(${index}, 'Accepted')">✅ Accepted</div>
-                    <div onclick="updateStatus(${index}, 'Unaccepted')">❌ Unaccepted</div>
-                  </div>
-                </div>
-                <div class="view-history-btn" onclick="toggleHistory(this)">📜 View History</div>
-                <div class="history">${historyHTML}</div>
-              </td>
-              <td><button onclick="printStudent(${index})">প্রিন্ট</button></td>
-            `;
-
-            tbody.appendChild(row);
-          });
+          allStudents = data;
+          updateStatistics(data);
+          displayStudents(data);
         });
+    }
+
+    function updateStatistics(data) {
+      document.getElementById('applications').textContent = data.length;
+      document.getElementById('accepted-count').textContent = data.filter(s => s.status === 'Accepted').length;
+      document.getElementById('processing-count').textContent = data.filter(s => s.status === 'Processing').length;
+      document.getElementById('unaccepted-count').textContent = data.filter(s => s.status === 'Unaccepted').length;
+    }
+
+    function displayStudents(students) {
+      const tbody = document.querySelector("#dataTable tbody");
+      tbody.innerHTML = "";
+
+      if (students.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8">কোন আবেদনকারী পাওয়া যায়নি</td></tr>`;
+        return;
+      }
+
+      students.forEach((student, originalIndex) => {
+        const actualIndex = allStudents.findIndex(s =>
+          s.name === student.name && s.birth === student.birth && s.phone === student.phone
+        );
+        const row = document.createElement("tr");
+        const logEntries = logs.filter(l => l.index === actualIndex);
+        let historyHTML = logEntries.length > 0 ?
+          logEntries.map(log => `<div class="history-entry">Status changed to "<b>${log.status}</b>" on ${log.timestamp}</div>`).join('') :
+          "<div class='history-entry'>No status change history available</div>";
+
+        row.innerHTML = `
+          <td>
+            ${student.photo ? `
+              <img src="/static/uploads/${student.photo}" alt="ছবি" style="width:40px;height:40px;cursor:pointer;border-radius:50%;margin-bottom:5px;" onclick="showImagePopup('/static/uploads/${student.photo}')"><br>` : ''}
+            ${student.name}
+          </td>
+          <td>${student.birth}</td>
+          <td>${student.class}</td>
+          <td>${student.guardian}</td>
+          <td>${student.phone}</td>
+          <td>${student.address}</td>
+          <td>
+            <span class="status ${student.status}">${student.status}</span>
+            <div class="dropdown">
+              <span style="cursor:pointer;">⋮</span>
+              <div class="dropdown-content">
+                <div onclick="updateStatus(${actualIndex}, 'Processing')">⏳ Processing</div>
+                <div onclick="updateStatus(${actualIndex}, 'Accepted')">✅ Accepted</div>
+                <div onclick="updateStatus(${actualIndex}, 'Unaccepted')">❌ Unaccepted</div>
+              </div>
+            </div>
+            <div class="view-history-btn" onclick="toggleHistory(this)">📜 View History</div>
+            <div class="history">${historyHTML}</div>
+          </td>
+          <td><button onclick="printStudent(${actualIndex})">প্রিন্ট</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function showImagePopup(src) {
+      const overlay = document.createElement("div");
+      overlay.style.position = "fixed";
+      overlay.style.top = 0;
+      overlay.style.left = 0;
+      overlay.style.width = "100vw";
+      overlay.style.height = "100vh";
+      overlay.style.background = "rgba(0,0,0,0.8)";
+      overlay.style.display = "flex";
+      overlay.style.justifyContent = "center";
+      overlay.style.alignItems = "center";
+      overlay.style.zIndex = 9999;
+
+      const img = document.createElement("img");
+      img.src = src;
+      img.style.maxWidth = "90%";
+      img.style.maxHeight = "90%";
+      img.style.border = "5px solid white";
+      img.style.borderRadius = "8px";
+      overlay.appendChild(img);
+
+      overlay.onclick = () => overlay.remove();
+      document.body.appendChild(overlay);
     }
 
     function toggleHistory(el) {
@@ -188,14 +390,45 @@
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ status: newStatus })
       })
-      .then(res => res.json())
-      .then(data => {
-        fetchData(); // reload table with updated status + logs
-      });
+      .then(() => fetchData());
     }
 
     function printStudent(index) {
       window.open(`/print?index=${index}`, '_blank');
+    }
+
+    function searchStudents() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const filteredStudents = allStudents.filter(student =>
+        student.name.toLowerCase().includes(searchTerm) ||
+        student.phone.toLowerCase().includes(searchTerm)
+      );
+      displayStudents(filteredStudents);
+    }
+
+    function applyFilters() {
+      const status = document.getElementById('statusFilter').value;
+      const studentClass = document.getElementById('classFilter').value;
+      let filtered = [...allStudents];
+      if (status !== 'all') filtered = filtered.filter(s => s.status === status);
+      if (studentClass !== 'all') filtered = filtered.filter(s => s.class === studentClass);
+      displayStudents(filtered);
+    }
+
+    function sortTable(columnIndex) {
+      const headers = document.querySelectorAll('th.sortable');
+      headers.forEach(header => header.classList.remove('sort-asc', 'sort-desc'));
+      sortDirection = currentSortColumn === columnIndex && sortDirection === 'asc' ? 'desc' : 'asc';
+      currentSortColumn = columnIndex;
+      headers[columnIndex].classList.add(sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+      const keys = ['name', 'birth', 'class', 'guardian', 'phone', 'address', 'status'];
+      const key = keys[columnIndex];
+      const sorted = [...allStudents].sort((a, b) => {
+        const valA = a[key]?.toString().toLowerCase() || "";
+        const valB = b[key]?.toString().toLowerCase() || "";
+        return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      });
+      displayStudents(sorted);
     }
   </script>
 </body>
