@@ -6,19 +6,10 @@ entrypoint = "main.py"
 runButton = "Run Flask App"
 
 [[workflows.workflow]]
-name = "Flask App"
-author = 39842365
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python main.py"
-
-[[workflows.workflow]]
 name = "Run Flask App"
 author = 39842365
 mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "python3 main.py"
+args = "python main.py"
