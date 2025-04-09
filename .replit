@@ -1,32 +1,15 @@
+run = "python3 main.py"
+language = "python"
 entrypoint = "main.py"
-modules = ["python-3.11"]
-
-[nix]
-channel = "stable-24_05"
-
-[unitTest]
-language = "python3"
-
-[gitHubImport]
-requiredFiles = [".replit", "replit.nix"]
-
-[deployment]
-run = ["python3", "main.py"]
-deploymentTarget = "cloudrun"
-
-[[ports]]
-localPort = 81
-externalPort = 80
 
 [workflows]
-runButton = "Run Flask App"
+runButton = "Flask App"
 
 [[workflows.workflow]]
-name = "Run Flask App"
+name = "Flask App"
 author = 39842365
 mode = "sequential"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "python main.py"
-
