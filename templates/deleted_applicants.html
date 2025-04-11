@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>মুছে ফেলা আবেদনকারী - মাদ্রাসাতুল মাদিনাহ</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    table {
+      width: 95%;
+      margin: 20px auto;
+      border-collapse: collapse;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 12px;
+      text-align: center;
+    }
+    th {
+      background-color: #f0f0f0;
+    }
+    .filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 20px auto;
+      max-width: 95%;
+    }
+    .search-box {
+      display: flex;
+      gap: 10px;
+    }
+    .search-box input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      width: 250px;
+    }
+    .filter-bar button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 15px;
+      cursor: pointer;
+    }
+    .deletion-reason {
+      font-style: italic;
+      color: #666;
+      font-size: 13px;
+    }
+    .action-btn {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 14px;
+      margin: 2px;
+    }
+    .restore-btn {
+      background-color: #28a745;
+    }
+    .view-btn {
+      background-color: #17a2b8;
+    }
+    .empty-list {
+      text-align: center;
+      padding: 30px;
+      color: #666;
+      font-style: italic;
+    }
+    .deleted-date {
+      font-size: 13px;
+      color: #666;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 0;
+      border-radius: 8px;
+      width: 500px;
+      max-width: 90%;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      padding: 15px 20px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #333;
+    }
+    .close-modal {
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #aaa;
+    }
+    .close-modal:hover {
+      color: #333;
+    }
+    .modal-body {
+      padding: 20px;
+    }
+    .applicant-name {
+      font-weight: bold;
+      font-size: 18px;
+      margin: 15px 0;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .button-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .cancel-btn {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+    .restore-confirm-btn {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+    .nav-tabs {
+      display: flex;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      border-bottom: 1px solid #ddd;
+    }
+    .nav-tabs li {
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+    .nav-tabs li.active {
+      border-bottom: 3px solid #28a745;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>মুছে ফেলা আবেদনকারীদের তালিকা</h1>
+  </div>
+
+  <div class="nav-tabs">
+    <li><a href="{{ url_for('admin') }}" style="text-decoration: none; color: inherit;">আবেদনকারীদের তালিকা</a></li>
+    <li><a href="{{ url_for('admin_messaging') }}" style="text-decoration: none; color: inherit;">বার্তা আদান-প্রদান</a></li>
+    <li class="active">মুছে ফেলা আবেদনকারী</li>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="নাম বা ফোন নম্বর দিয়ে সার্চ করুন...">
+      <button onclick="searchDeletedStudents()">🔍 সার্চ</button>
+    </div>
+  </div>
+
+  <table id="deletedTable">
+    <thead>
+      <tr>
+        <th>নাম</th>
+        <th>শ্রেণি</th>
+        <th>অভিভাবক</th>
+        <th>মোবাইল</th>
+        <th>মুছে ফেলার তারিখ</th>
+        <th>মুছে ফেলার কারণ</th>
+        <th>একশন</th>
+      </tr>
+    </thead>
+    <tbody id="deletedTableBody">
+      <!-- Deleted applicants will be populated here -->
+    </tbody>
+  </table>
+
+  <!-- View Details Modal -->
+  <div id="viewDetailsModal" class="modal">
+    <div class="modal-content" style="width: 600px;">
+      <div class="modal-header">
+        <h2>আবেদনকারীর বিস্তারিত তথ্য</h2>
+        <span class="close-modal" onclick="closeViewModal()">&times;</span>
+      </div>
+      <div class="modal-body" id="viewDetailsContent">
+        <!-- Applicant details will be populated here -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Restore Confirmation Modal -->
+  <div id="restoreModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>আবেদনকারী পুনরুদ্ধার করুন</h2>
+        <span class="close-modal" onclick="closeRestoreModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p>আপনি কি নিশ্চিত যে আপনি এই আবেদনকারীকে পুনরুদ্ধার করতে চান?</p>
+        <p class="applicant-name" id="restoreApplicantName"></p>
+        
+        <div class="button-group">
+          <button onclick="closeRestoreModal()" class="cancel-btn">বাতিল করুন</button>
+          <button onclick="confirmRestore()" class="restore-confirm-btn">পুনরুদ্ধার করুন</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let deletedStudents = [];
+    let currentRestoreId = null;
+    let currentViewId = null;
+
+    // Fetch deleted applicants
+    function fetchDeletedApplicants() {
+      fetch('/deleted-data')
+        .then(res => res.json())
+        .then(data => {
+          deletedStudents = data;
+          displayDeletedStudents(data);
+        })
+        .catch(err => {
+          document.getElementById('deletedTableBody').innerHTML = `
+            <tr>
+              <td colspan="7" class="empty-list">মুছে ফেলা আবেদনকারীদের তালিকা লোড করতে সমস্যা হয়েছে।</td>
+            </tr>
+          `;
+        });
+    }
+
+    // Display deleted students in table
+    function displayDeletedStudents(students) {
+      const tbody = document.getElementById('deletedTableBody');
+      
+      if (students.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="empty-list">কোন মুছে ফেলা আবেদনকারী পাওয়া যায়নি</td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = '';
+      students.forEach(student => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${student.name}</td>
+          <td>${student.class}</td>
+          <td>${student.guardian}</td>
+          <td>${student.phone}</td>
+          <td class="deleted-date">${student.deleted_at}</td>
+          <td class="deletion-reason">${formatReason(student.delete_reason)}</td>
+          <td>
+            <button class="action-btn view-btn" onclick="viewDetails('${student.id}')">বিস্তারিত</button>
+            <button class="action-btn restore-btn" onclick="showRestoreConfirmation('${student.id}')">পুনরুদ্ধার</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // Format reason text
+    function formatReason(reason) {
+      if (!reason) return "কোন কারণ উল্লেখ করা হয়নি";
+      
+      const reasonMap = {
+        'duplicate': 'ডুপ্লিকেট আবেদন',
+        'incomplete': 'অসম্পূর্ণ তথ্য',
+        'requested': 'আবেদনকারী অনুরোধ করেছেন'
+      };
+      
+      return reasonMap[reason] || reason;
+    }
+
+    // Search deleted students
+    function searchDeletedStudents() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const filteredStudents = deletedStudents.filter(student =>
+        student.name.toLowerCase().includes(searchTerm) ||
+        student.phone.toLowerCase().includes(searchTerm)
+      );
+      displayDeletedStudents(filteredStudents);
+    }
+
+    // View applicant details
+    function viewDetails(id) {
+      currentViewId = id;
+      const student = deletedStudents.find(s => s.id === id);
+      
+      if (!student) return;
+      
+      const content = document.getElementById('viewDetailsContent');
+      content.innerHTML = `
+        <div style="text-align: center; margin-bottom: 15px;">
+          ${student.photo ? `<img src="/static/uploads/${student.photo}" alt="ছবি" style="width:100px;height:100px;border-radius:50%;margin-bottom:10px;">` : ''}
+          <h3 style="margin: 5px 0;">${student.name}</h3>
+          <div style="color: #666; font-size: 14px;">মুছে ফেলা হয়েছে: ${student.deleted_at}</div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+          <div style="padding: 10px; background: #f9f9f9;">
+            <strong>জন্ম তারিখ:</strong> ${student.birth}
+          </div>
+          <div style="padding: 10px; background: #f9f9f9;">
+            <strong>শ্রেণি:</strong> ${student.class}
+          </div>
+          <div style="padding: 10px; background: #f9f9f9;">
+            <strong>অভিভাবক:</strong> ${student.guardian}
+          </div>
+          <div style="padding: 10px; background: #f9f9f9;">
+            <strong>মোবাইল:</strong> ${student.phone}
+          </div>
+          <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
+            <strong>ঠিকানা:</strong> ${student.address}
+          </div>
+          <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
+            <strong>আবেদনের তারিখ:</strong> ${student.submitted_at}
+          </div>
+          <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
+            <strong>মুছে ফেলার কারণ:</strong> ${formatReason(student.delete_reason)}
+          </div>
+        </div>
+        
+        <div style="margin-top: 20px; text-align: center;">
+          <button onclick="showRestoreConfirmation('${student.id}')" class="restore-confirm-btn">পুনরুদ্ধার করুন</button>
+        </div>
+      `;
+      
+      document.getElementById('viewDetailsModal').style.display = 'block';
+    }
+
+    // Close view modal
+    function closeViewModal() {
+      document.getElementById('viewDetailsModal').style.display = 'none';
+    }
+
+    // Show restore confirmation
+    function showRestoreConfirmation(id) {
+      currentRestoreId = id;
+      const student = deletedStudents.find(s => s.id === id);
+      
+      if (!student) return;
+      
+      document.getElementById('restoreApplicantName').textContent = student.name;
+      document.getElementById('restoreModal').style.display = 'block';
+      
+      // Close view modal if open
+      closeViewModal();
+    }
+
+    // Close restore modal
+    function closeRestoreModal() {
+      document.getElementById('restoreModal').style.display = 'none';
+    }
+
+    // Confirm restore
+    function confirmRestore() {
+      if (!currentRestoreId) return;
+      
+      fetch(`/restore-applicant/${currentRestoreId}`, {
+        method: 'POST'
+      })
+      .then(res => res.json())
+      .then(response => {
+        if (response.success) {
+          // Remove from local array
+          deletedStudents = deletedStudents.filter(s => s.id !== currentRestoreId);
+          displayDeletedStudents(deletedStudents);
+          closeRestoreModal();
+          
+          // Show success notification
+          alert('আবেদনকারী সফলভাবে পুনরুদ্ধার করা হয়েছে!');
+        }
+      });
+    }
+
+    // Initialize
+    fetchDeletedApplicants();
+
+    // Listen for Enter key in search input
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        searchDeletedStudents();
+      }
+    });
+
+    // Close modals when clicking outside
+    window.onclick = function(event) {
+      const viewModal = document.getElementById('viewDetailsModal');
+      const restoreModal = document.getElementById('restoreModal');
+      
+      if (event.target === viewModal) {
+        closeViewModal();
+      } else if (event.target === restoreModal) {
+        closeRestoreModal();
+      }
+    };
+  </script>
+</body>
+</html>

@@ -214,6 +214,130 @@
       border-bottom: 3px solid #28a745;
       font-weight: bold;
     }
+    
+    /* Delete option styling */
+    .delete-option {
+      color: #dc3545;
+      border-top: 1px solid #eee;
+      margin-top: 5px;
+      padding-top: 5px;
+    }
+
+    .delete-option:hover {
+      background-color: #ffeeee;
+    }
+    
+    /* Modal styling */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 0;
+      border-radius: 8px;
+      width: 500px;
+      max-width: 90%;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    }
+
+    .modal-header {
+      padding: 15px 20px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #dee2e6;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 20px;
+      color: #333;
+    }
+
+    .close-modal {
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #aaa;
+    }
+
+    .close-modal:hover {
+      color: #333;
+    }
+
+    .modal-body {
+      padding: 20px;
+    }
+
+    .applicant-name {
+      font-weight: bold;
+      font-size: 18px;
+      margin: 15px 0;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .warning-text {
+      color: #dc3545;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .reason-container {
+      margin-bottom: 20px;
+    }
+
+    .reason-container label {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    .reason-container select,
+    .reason-container textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .button-group {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .cancel-btn {
+      background-color: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+
+    .delete-confirm-btn {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
   </style>
 
   
@@ -226,6 +350,7 @@
   <div class="nav-tabs">
     <li class="active">আবেদনকারীদের তালিকা</li>
     <li><a href="{{ url_for('admin_messaging') }}" style="text-decoration: none; color: inherit;">বার্তা আদান-প্রদান</a></li>
+    <li><a href="{{ url_for('deleted_applicants') }}" style="text-decoration: none; color: inherit;">মুছে ফেলা আবেদনকারী</a></li>
   </div>
 
   <div class="top-bar">
@@ -290,12 +415,45 @@
     </thead>
     <tbody></tbody>
   </table>
+  
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>আবেদনকারী মুছে ফেলার নিশ্চিতকরণ</h2>
+        <span class="close-modal" onclick="closeDeleteModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <p>আপনি কি নিশ্চিত যে আপনি এই আবেদনকারীকে মুছে ফেলতে চান?</p>
+        <p class="applicant-name" id="deleteApplicantName"></p>
+        <p class="warning-text">সতর্কতা: এই কাজটি করলে আবেদনকারী তালিকা থেকে বাদ যাবে!</p>
+        
+        <div class="reason-container">
+          <label for="deleteReason">মুছে ফেলার কারণ (ঐচ্ছিক):</label>
+          <select id="deleteReason">
+            <option value="">-- কারণ নির্বাচন করুন --</option>
+            <option value="duplicate">ডুপ্লিকেট আবেদন</option>
+            <option value="incomplete">অসম্পূর্ণ তথ্য</option>
+            <option value="requested">আবেদনকারী অনুরোধ করেছেন</option>
+            <option value="other">অন্যান্য</option>
+          </select>
+          <textarea id="deleteReasonText" placeholder="অন্যান্য কারণ লিখুন..." style="display: none;"></textarea>
+        </div>
+        
+        <div class="button-group">
+          <button onclick="closeDeleteModal()" class="cancel-btn">বাতিল করুন</button>
+          <button onclick="confirmDelete()" class="delete-confirm-btn">নিশ্চিত করুন</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     let logs = {};
     let allStudents = [];
     let currentSortColumn = -1;
     let sortDirection = 'asc';
+    let currentDeleteIndex = -1;
 
     fetch('/status-log')
       .then(res => res.json())
@@ -362,6 +520,7 @@
                 <div onclick="updateStatus(${actualIndex}, 'Processing')">⏳ Processing</div>
                 <div onclick="updateStatus(${actualIndex}, 'Accepted')">✅ Accepted</div>
                 <div onclick="updateStatus(${actualIndex}, 'Unaccepted')">❌ Unaccepted</div>
+                <div onclick="showDeleteConfirmation(${actualIndex})" class="delete-option">🗑️ Delete</div>
               </div>
             </div>
             <div class="view-history-btn" onclick="toggleHistory(this)">📜 View History</div>
@@ -472,6 +631,66 @@
         return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
       });
       displayStudents(sorted);
+    }
+    
+    // Show delete confirmation modal
+    function showDeleteConfirmation(index) {
+      currentDeleteIndex = index;
+      const student = allStudents[index];
+      
+      document.getElementById('deleteApplicantName').textContent = student.name;
+      document.getElementById('deleteModal').style.display = 'block';
+      
+      // Reset reason fields
+      document.getElementById('deleteReason').value = '';
+      document.getElementById('deleteReasonText').value = '';
+      document.getElementById('deleteReasonText').style.display = 'none';
+    }
+
+    // Close delete modal
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').style.display = 'none';
+      currentDeleteIndex = -1;
+    }
+
+    // Handle reason change
+    document.getElementById('deleteReason').addEventListener('change', function() {
+      const reasonText = document.getElementById('deleteReasonText');
+      reasonText.style.display = this.value === 'other' ? 'block' : 'none';
+    });
+
+    // Confirm delete
+    function confirmDelete() {
+      if (currentDeleteIndex < 0) return;
+      
+      const reasonSelect = document.getElementById('deleteReason');
+      const reasonText = document.getElementById('deleteReasonText');
+      
+      let deleteReason = reasonSelect.value;
+      if (deleteReason === 'other' && reasonText.value.trim()) {
+        deleteReason = reasonText.value.trim();
+      }
+      
+      fetch(`/delete-applicant/${currentDeleteIndex}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ reason: deleteReason })
+      })
+      .then(res => res.json())
+      .then(response => {
+        if (response.success) {
+          // Remove from local array
+          allStudents.splice(currentDeleteIndex, 1);
+          displayStudents(allStudents);
+          closeDeleteModal();
+          
+          // Update statistics
+          updateStatistics(allStudents);
+          
+          // Show success notification
+          alert('আবেদনকারী সফলভাবে মুছে ফেলা হয়েছে!');
+        }
+      });
     }
   </script>
 </body>
