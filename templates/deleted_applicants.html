@@ -166,6 +166,113 @@
       border-bottom: 3px solid #28a745;
       font-weight: bold;
     }
+    <style>
+      /* Tab Styling */
+      .tab-container {
+        width: 100%;
+      }
+
+      .tabs {
+        display: flex;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 15px;
+      }
+
+      .tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        font-weight: normal;
+      }
+
+      .tab.active {
+        font-weight: bold;
+        border-bottom: 2px solid #28a745;
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      /* Message Styling */
+      .messages-container {
+        height: 350px;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        border-radius: 4px;
+        padding: 15px;
+        background-color: #f9f9f9;
+        margin-bottom: 15px;
+      }
+
+      .admin-message, .applicant-message {
+        max-width: 70%;
+        margin-bottom: 15px;
+        padding: 10px 15px;
+        border-radius: 15px;
+        position: relative;
+      }
+
+      .admin-message {
+        background-color: #e8f5e9;
+        align-self: flex-start;
+        border-bottom-left-radius: 5px;
+        margin-right: auto;
+      }
+
+      .applicant-message {
+        background-color: #dcf8c6;
+        align-self: flex-end;
+        border-bottom-right-radius: 5px;
+        margin-left: auto;
+      }
+
+      .time {
+        font-size: 11px;
+        color: #888;
+        margin-top: 5px;
+        text-align: right;
+      }
+
+      .loading-messages {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+      }
+
+      .no-messages {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+        font-style: italic;
+      }
+
+      .message-count {
+        text-align: right;
+        font-size: 12px;
+        color: #666;
+        margin-bottom: 15px;
+      }
+
+      .archive-info {
+        background-color: #f0f0f0;
+        padding: 10px 15px;
+        border-radius: 4px;
+        margin-bottom: 15px;
+        font-size: 14px;
+      }
+
+      .message-btn {
+        background-color: #6c757d;
+      }
+
+      .text-center {
+        text-align: center;
+      }
+    </style>
   </style>
 </head>
 <body>
@@ -203,18 +310,58 @@
     </tbody>
   </table>
 
-  <!-- View Details Modal -->
-  <div id="viewDetailsModal" class="modal">
-    <div class="modal-content" style="width: 600px;">
+  <!-- Message Archive Modal -->
+  <div id="messageArchiveModal" class="modal">
+    <div class="modal-content" style="width: 600px; max-height: 80vh;">
       <div class="modal-header">
-        <h2>আবেদনকারীর বিস্তারিত তথ্য</h2>
-        <span class="close-modal" onclick="closeViewModal()">&times;</span>
+        <h2>আর্কাইভ করা বার্তালাপ - <span id="messageArchiveStudentName"></span></h2>
+        <span class="close-modal" onclick="closeMessageArchiveModal()">&times;</span>
       </div>
-      <div class="modal-body" id="viewDetailsContent">
-        <!-- Applicant details will be populated here -->
+      <div class="modal-body">
+        <div class="archive-info">
+          <div>মুছে ফেলার তারিখ: <span id="messageArchiveDeleteDate"></span></div>
+          <div>আবেদনের স্ট্যাটাস ছিল: <span id="messageArchiveStatus"></span></div>
+        </div>
+
+        <div class="messages-container" id="modalArchivedMessages">
+          <!-- Archived messages will be loaded here -->
+        </div>
+
+        <div class="message-count" id="messageCount"></div>
+
+        <div class="button-group text-center">
+          <button onclick="closeMessageArchiveModal()" class="cancel-btn">বন্ধ করুন</button>
+        </div>
       </div>
     </div>
   </div>
+  
+  <!-- Add tabs to the viewDetailsModal -->
+<div class="modal-body" id="viewDetailsContent">
+  <div class="tab-container">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab(this, 'details-content')">বিস্তারিত তথ্য</div>
+      <div class="tab" onclick="switchTab(this, 'messages-content')">বার্তালাপ ইতিহাস</div>
+    </div>
+
+    
+
+
+
+    
+    
+    <div id="details-content" class="tab-content active">
+      <!-- Existing details content will be here -->
+    </div>
+    
+    <div id="messages-content" class="tab-content">
+      <div class="messages-container" id="archivedMessages">
+        <!-- Archived messages will be loaded here -->
+        <div class="loading-messages">বার্তা লোড হচ্ছে...</div>
+      </div>
+    </div>
+  </div>
+</div>
 
   <!-- Restore Confirmation Modal -->
   <div id="restoreModal" class="modal">
@@ -257,6 +404,90 @@
         });
     }
 
+
+  function switchTab(tabElement, contentId) {
+  // Remove active class from all tabs
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.classList.remove('active');
+  });
+  
+  // Hide all tab contents
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.remove('active');
+  });
+  
+  // Add active class to selected tab
+  tabElement.classList.add('active');
+  
+  // Show selected content
+  document.getElementById(contentId).classList.add('active');
+  
+  // If messages tab is selected, load messages
+  if (contentId === 'messages-content' && currentViewId) {
+    loadArchivedMessages(currentViewId, 'archivedMessages');
+  }
+}
+
+    function loadArchivedMessages(studentId, containerId) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = '<div class="loading-messages">বার্তা লোড হচ্ছে...</div>';
+
+      fetch(`/get-archived-messages/${studentId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (!data.messages || data.messages.length === 0) {
+            container.innerHTML = '<div class="no-messages">কোন বার্তা পাওয়া যায়নি</div>';
+            return;
+          }
+
+          let messagesHtml = '';
+          data.messages.forEach(message => {
+            const messageClass = message.sent_by === 'admin' ? 'admin-message' : 'applicant-message';
+
+            messagesHtml += `
+              <div class="${messageClass}">
+                ${message.text}
+                <div class="time">${message.timestamp}</div>
+              </div>
+            `;
+          });
+
+          container.innerHTML = messagesHtml;
+
+          // Update message count if we're in the modal view
+          if (containerId === 'modalArchivedMessages') {
+            document.getElementById('messageCount').textContent = `মোট বার্তা: ${data.messages.length}`;
+          }
+
+          // Scroll to bottom
+          container.scrollTop = container.scrollHeight;
+        })
+        .catch(error => {
+          container.innerHTML = '<div class="no-messages">বার্তা লোড করতে সমস্যা হয়েছে</div>';
+        });
+    }
+
+    function viewArchivedMessages(studentId) {
+      const student = deletedStudents.find(s => s.id === studentId);
+
+      if (!student) return;
+
+      document.getElementById('messageArchiveStudentName').textContent = student.name;
+      document.getElementById('messageArchiveDeleteDate').textContent = student.deleted_at;
+      document.getElementById('messageArchiveStatus').textContent = student.status;
+
+      // Show the modal
+      document.getElementById('messageArchiveModal').style.display = 'block';
+
+      // Load messages
+      loadArchivedMessages(studentId, 'modalArchivedMessages');
+    }
+
+    function closeMessageArchiveModal() {
+      document.getElementById('messageArchiveModal').style.display = 'none';
+    }
+    
+
     // Display deleted students in table
     function displayDeletedStudents(students) {
       const tbody = document.getElementById('deletedTableBody');
@@ -281,9 +512,10 @@
           <td class="deleted-date">${student.deleted_at}</td>
           <td class="deletion-reason">${formatReason(student.delete_reason)}</td>
           <td>
-            <button class="action-btn view-btn" onclick="viewDetails('${student.id}')">বিস্তারিত</button>
-            <button class="action-btn restore-btn" onclick="showRestoreConfirmation('${student.id}')">পুনরুদ্ধার</button>
-          </td>
+  <button class="action-btn view-btn" onclick="viewDetails('${student.id}')">বিস্তারিত</button>
+  <button class="action-btn restore-btn" onclick="showRestoreConfirmation('${student.id}')">পুনরুদ্ধার</button>
+  ${student.has_messages ? `<button class="action-btn message-btn" onclick="viewArchivedMessages('${student.id}')">💬 বার্তালাপ</button>` : ''}
+</td>
         `;
         tbody.appendChild(row);
       });
@@ -314,50 +546,54 @@
 
     // View applicant details
     function viewDetails(id) {
-      currentViewId = id;
-      const student = deletedStudents.find(s => s.id === id);
-      
-      if (!student) return;
-      
-      const content = document.getElementById('viewDetailsContent');
-      content.innerHTML = `
-        <div style="text-align: center; margin-bottom: 15px;">
-          ${student.photo ? `<img src="/static/uploads/${student.photo}" alt="ছবি" style="width:100px;height:100px;border-radius:50%;margin-bottom:10px;">` : ''}
-          <h3 style="margin: 5px 0;">${student.name}</h3>
-          <div style="color: #666; font-size: 14px;">মুছে ফেলা হয়েছে: ${student.deleted_at}</div>
-        </div>
-        
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-          <div style="padding: 10px; background: #f9f9f9;">
-            <strong>জন্ম তারিখ:</strong> ${student.birth}
-          </div>
-          <div style="padding: 10px; background: #f9f9f9;">
-            <strong>শ্রেণি:</strong> ${student.class}
-          </div>
-          <div style="padding: 10px; background: #f9f9f9;">
-            <strong>অভিভাবক:</strong> ${student.guardian}
-          </div>
-          <div style="padding: 10px; background: #f9f9f9;">
-            <strong>মোবাইল:</strong> ${student.phone}
-          </div>
-          <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
-            <strong>ঠিকানা:</strong> ${student.address}
-          </div>
-          <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
-            <strong>আবেদনের তারিখ:</strong> ${student.submitted_at}
-          </div>
-          <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
-            <strong>মুছে ফেলার কারণ:</strong> ${formatReason(student.delete_reason)}
-          </div>
-        </div>
-        
-        <div style="margin-top: 20px; text-align: center;">
-          <button onclick="showRestoreConfirmation('${student.id}')" class="restore-confirm-btn">পুনরুদ্ধার করুন</button>
-        </div>
-      `;
-      
-      document.getElementById('viewDetailsModal').style.display = 'block';
-    }
+  currentViewId = id;
+  const student = deletedStudents.find(s => s.id === id);
+  
+  if (!student) return;
+  
+  const content = document.getElementById('details-content');
+  content.innerHTML = `
+    <div style="text-align: center; margin-bottom: 15px;">
+      ${student.photo ? `<img src="/static/uploads/${student.photo}" alt="ছবি" style="width:100px;height:100px;border-radius:50%;margin-bottom:10px;">` : ''}
+      <h3 style="margin: 5px 0;">${student.name}</h3>
+      <div style="color: #666; font-size: 14px;">মুছে ফেলা হয়েছে: ${student.deleted_at}</div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+      <div style="padding: 10px; background: #f9f9f9;">
+        <strong>জন্ম তারিখ:</strong> ${student.birth}
+      </div>
+      <div style="padding: 10px; background: #f9f9f9;">
+        <strong>শ্রেণি:</strong> ${student.class}
+      </div>
+      <div style="padding: 10px; background: #f9f9f9;">
+        <strong>অভিভাবক:</strong> ${student.guardian}
+      </div>
+      <div style="padding: 10px; background: #f9f9f9;">
+        <strong>মোবাইল:</strong> ${student.phone}
+      </div>
+      <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
+        <strong>ঠিকানা:</strong> ${student.address}
+      </div>
+      <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
+        <strong>আবেদনের তারিখ:</strong> ${student.submitted_at}
+      </div>
+      <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
+        <strong>মুছে ফেলার কারণ:</strong> ${formatReason(student.delete_reason)}
+      </div>
+    </div>
+    
+    <div style="margin-top: 20px; text-align: center;">
+      <button onclick="showRestoreConfirmation('${student.id}')" class="restore-confirm-btn" style="background-color: #28a745;">পুনরুদ্ধার করুন</button>
+    </div>
+  `;
+  
+  // Reset to the details tab
+  document.querySelector('.tab').click();
+  
+  // Show the modal
+  document.getElementById('viewDetailsModal').style.display = 'block';
+}
 
     // Close view modal
     function closeViewModal() {

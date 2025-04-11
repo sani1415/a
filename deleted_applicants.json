@@ -1,0 +1,18 @@
+[
+  {
+    "name": "আহমাদ নাবিল",
+    "birth": "2025-04-01",
+    "class": "নূরানী",
+    "guardian": "ব",
+    "phone": "01882087634",
+    "address": "কক",
+    "status": "Accepted",
+    "submitted_at": "2025-04-08 01:31 PM",
+    "application_id": "824689",
+    "password_hash": "34845a274af2de103f09424f5e203c3d",
+    "photo": "20250408133158_download.jpg",
+    "id": "76276ea8-8bd9-4c0b-aab1-2b4e28acba4e",
+    "deleted_at": "2025-04-11 06:46 AM",
+    "delete_reason": "duplicate"
+  }
+]
