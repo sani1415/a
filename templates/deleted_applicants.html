@@ -312,6 +312,186 @@
 
   <!-- Message Archive Modal -->
   <div id="messageArchiveModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Message History</h2>
+        <span class="close-modal" onclick="closeMessageModal()">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div id="messageContainer"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let deletedApplicants = [];
+
+    function fetchDeletedApplicants() {
+      fetch('/deleted-data')
+        .then(res => res.json())
+        .then(data => {
+          deletedApplicants = data;
+          displayDeletedApplicants(data);
+        })
+        .catch(err => {
+          console.error("Error fetching deleted applicants:", err);
+        });
+    }
+
+    function displayDeletedApplicants(applicants) {
+      const tbody = document.getElementById('deletedTableBody');
+      tbody.innerHTML = '';
+
+      if (applicants.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7">কোন মুছে ফেলা আবেদনকারী পাওয়া যায়নি</td></tr>`;
+        return;
+      }
+
+      applicants.forEach(applicant => {
+        const row = document.createElement('tr');
+        
+        let actions = `
+          <button onclick="restoreApplicant('${applicant.id}')">পুনরুদ্ধার</button>
+        `;
+        
+        if (applicant.has_messages) {
+          actions += `
+            <button onclick="viewMessages('${applicant.id}')">বার্তাসমূহ</button>
+          `;
+        }
+        
+        row.innerHTML = `
+          <td>
+            ${applicant.photo ? `
+              <img src="/static/uploads/${applicant.photo}" alt="ছবি" style="width:40px;height:40px;cursor:pointer;border-radius:50%;margin-bottom:5px;" onclick="showImagePopup('/static/uploads/${applicant.photo}')"><br>` : ''}
+            ${applicant.name}
+          </td>
+          <td>${applicant.class}</td>
+          <td>${applicant.guardian}</td>
+          <td>${applicant.phone}</td>
+          <td>${applicant.deleted_at}</td>
+          <td>${applicant.delete_reason || 'কোন কারণ দেওয়া হয়নি'}</td>
+          <td>${actions}</td>
+        `;
+        
+        tbody.appendChild(row);
+      });
+    }
+
+    function searchDeletedStudents() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const filteredApplicants = deletedApplicants.filter(applicant =>
+        applicant.name.toLowerCase().includes(searchTerm) ||
+        applicant.phone.toLowerCase().includes(searchTerm)
+      );
+      displayDeletedApplicants(filteredApplicants);
+    }
+
+    function restoreApplicant(id) {
+      if (confirm('আপনি কি নিশ্চিত যে আপনি এই আবেদনকারীকে পুনরুদ্ধার করতে চান?')) {
+        fetch(`/restore-applicant/${id}`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'}
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            alert('আবেদনকারী সফলভাবে পুনরুদ্ধার করা হয়েছে!');
+            fetchDeletedApplicants();
+          } else {
+            alert('আবেদনকারী পুনরুদ্ধার করতে সমস্যা হয়েছে: ' + data.error);
+          }
+        })
+        .catch(err => {
+          console.error("Error restoring applicant:", err);
+          alert('আবেদনকারী পুনরুদ্ধার করতে সমস্যা হয়েছে!');
+        });
+      }
+    }
+
+    function showImagePopup(src) {
+      const overlay = document.createElement("div");
+      overlay.style.position = "fixed";
+      overlay.style.top = 0;
+      overlay.style.left = 0;
+      overlay.style.width = "100vw";
+      overlay.style.height = "100vh";
+      overlay.style.background = "rgba(0,0,0,0.8)";
+      overlay.style.display = "flex";
+      overlay.style.justifyContent = "center";
+      overlay.style.alignItems = "center";
+      overlay.style.zIndex = 9999;
+
+      const img = document.createElement("img");
+      img.src = src;
+      img.style.maxWidth = "90%";
+      img.style.maxHeight = "90%";
+      img.style.border = "5px solid white";
+      img.style.borderRadius = "8px";
+      overlay.appendChild(img);
+
+      overlay.onclick = () => overlay.remove();
+      document.body.appendChild(overlay);
+    }
+
+    function viewMessages(applicantId) {
+      console.log("Fetching messages for:", applicantId);
+      fetch(`/get-archived-messages/${applicantId}`)
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! Status: ${res.status}`);
+          }
+          return res.json();
+        })
+        .then(data => {
+          displayMessages(data.messages, applicantId);
+        })
+        .catch(err => {
+          console.error("Error fetching messages:", err);
+          alert('বার্তা লোড করতে সমস্যা হয়েছে!');
+        });
+    }
+
+    function displayMessages(messages, applicantId) {
+      const applicant = deletedApplicants.find(a => a.id === applicantId);
+      const container = document.getElementById('messageContainer');
+      
+      if (!messages || messages.length === 0) {
+        container.innerHTML = `<p>কোনো বার্তা পাওয়া যায়নি।</p>`;
+      } else {
+        let html = `<h3>${applicant.name} এর বার্তাসমূহ</h3>`;
+        
+        messages.forEach(message => {
+          const isAdmin = message.sent_by === 'admin';
+          const alignment = isAdmin ? 'right' : 'left';
+          const bgColor = isAdmin ? '#e6f7ff' : '#f0f0f0';
+          
+          html += `
+            <div style="text-align: ${alignment}; margin: 10px 0;">
+              <div style="display: inline-block; background-color: ${bgColor}; padding: 10px; border-radius: 10px; max-width: 80%;">
+                <p style="margin: 0;">${message.text}</p>
+                <small style="color: #777;">${isAdmin ? 'অ্যাডমিন' : 'আবেদনকারী'} - ${message.timestamp}</small>
+              </div>
+            </div>
+          `;
+        });
+        
+        container.innerHTML = html;
+      }
+      
+      document.getElementById('messageArchiveModal').style.display = 'block';
+    }
+
+    function closeMessageModal() {
+      document.getElementById('messageArchiveModal').style.display = 'none';
+    }
+
+    // Load deleted applicants on page load
+    document.addEventListener('DOMContentLoaded', fetchDeletedApplicants);
+
+    // Auto refresh every 2 minutes
+    setInterval(fetchDeletedApplicants, 120000);
+  </script>v id="messageArchiveModal" class="modal">
     <div class="modal-content" style="width: 600px; max-height: 80vh;">
       <div class="modal-header">
         <h2>আর্কাইভ করা বার্তালাপ - <span id="messageArchiveStudentName"></span></h2>
