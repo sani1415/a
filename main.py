@@ -172,6 +172,7 @@ def delete_applicant(index):
     try:
         reason = request.json.get('reason', '')
         timestamp = datetime.now().strftime('%Y-%m-%d %I:%M %p')
+        message_archive_id = None
         
         # Load current applicants
         with open('data.json', 'r', encoding='utf-8') as f:
@@ -189,41 +190,47 @@ def delete_applicant(index):
         
         # Archive messages if they exist
         if application_id:
-            with open('messages.json', 'r', encoding='utf-8') as f:
-                messages = json.load(f)
-                
-            if application_id in messages:
-                # Archive the messages
-                if not os.path.exists('archived_messages.json'):
+            try:
+                with open('messages.json', 'r', encoding='utf-8') as f:
+                    messages = json.load(f)
+                    
+                if application_id in messages and messages[application_id]:
+                    # Create archived_messages.json if it doesn't exist
+                    if not os.path.exists('archived_messages.json'):
+                        with open('archived_messages.json', 'w', encoding='utf-8') as f:
+                            json.dump({}, f)
+                    
+                    # Load archived messages
+                    with open('archived_messages.json', 'r', encoding='utf-8') as f:
+                        content = f.read()
+                        archived_messages = json.loads(content) if content.strip() else {}
+                    
+                    # Create a unique ID for the archived messages
+                    message_archive_id = str(uuid.uuid4())
+                    
+                    # Store archive metadata
+                    archived_messages[message_archive_id] = {
+                        'application_id': application_id,
+                        'student_name': applicant.get('name', ''),
+                        'deleted_at': timestamp,
+                        'status_at_deletion': applicant.get('status', 'Processing'),
+                        'messages': messages[application_id]
+                    }
+                    
                     with open('archived_messages.json', 'w', encoding='utf-8') as f:
-                        json.dump({}, f)
-                
-                with open('archived_messages.json', 'r', encoding='utf-8') as f:
-                    content = f.read()
-                    archived_messages = json.loads(content) if content.strip() else {}
-                
-                # Create a unique ID for the archived messages
-                message_archive_id = str(uuid.uuid4())
-                
-                # Store archive metadata
-                archived_messages[message_archive_id] = {
-                    'application_id': application_id,
-                    'student_name': applicant.get('name', ''),
-                    'deleted_at': timestamp,
-                    'status_at_deletion': applicant.get('status', 'Processing'),
-                    'messages': messages[application_id]
-                }
-                
-                with open('archived_messages.json', 'w', encoding='utf-8') as f:
-                    json.dump(archived_messages, f, ensure_ascii=False, indent=2)
-                
-                # Flag that this applicant has messages
-                has_messages = True
-                
-                # Remove from active messages
-                del messages[application_id]
-                with open('messages.json', 'w', encoding='utf-8') as f:
-                    json.dump(messages, f, ensure_ascii=False, indent=2)
+                        json.dump(archived_messages, f, ensure_ascii=False, indent=2)
+                    
+                    # Flag that this applicant has messages
+                    has_messages = True
+                    
+                    # Remove from active messages
+                    del messages[application_id]
+                    with open('messages.json', 'w', encoding='utf-8') as f:
+                        json.dump(messages, f, ensure_ascii=False, indent=2)
+                    
+                    print(f"Archived messages for {application_id} with archive ID {message_archive_id}")
+            except Exception as msg_err:
+                print(f"Error archiving messages: {str(msg_err)}")
         
         # Add deletion metadata
         applicant['id'] = str(uuid.uuid4())  # Generate unique ID for retrieval
@@ -244,6 +251,7 @@ def delete_applicant(index):
             
         return jsonify({'success': True})
     except Exception as e:
+        print(f"Error deleting applicant: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/deleted-data')
@@ -343,27 +351,37 @@ def get_archived_messages(applicant_id):
                 break
 
         if not applicant:
+            # For debugging
+            print(f"Applicant with ID {applicant_id} not found")
+            print(f"Available IDs: {[a.get('id') for a in deleted_applicants]}")
             return jsonify({'error': 'Applicant not found'}), 404
 
         # If this applicant has no messages
         if not applicant.get('has_messages') or not applicant.get('message_archive_id'):
+            print(f"Applicant has no messages. has_messages: {applicant.get('has_messages')}, message_archive_id: {applicant.get('message_archive_id')}")
+            return jsonify({'messages': []})
+
+        # Create archived_messages.json if it doesn't exist
+        if not os.path.exists('archived_messages.json'):
+            with open('archived_messages.json', 'w', encoding='utf-8') as f:
+                json.dump({}, f)
             return jsonify({'messages': []})
 
         # Load archived messages
-        if not os.path.exists('archived_messages.json'):
-            return jsonify({'messages': []})
-
         with open('archived_messages.json', 'r', encoding='utf-8') as f:
-            archived_messages = json.load(f)
+            content = f.read()
+            archived_messages = json.loads(content) if content.strip() else {}
 
         message_archive_id = applicant.get('message_archive_id')
 
         if message_archive_id not in archived_messages:
+            print(f"Message archive ID {message_archive_id} not found in archived_messages")
             return jsonify({'messages': []})
 
         # Return the messages
         return jsonify({'messages': archived_messages[message_archive_id]['messages']})
     except Exception as e:
+        print(f"Error getting archived messages: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/export-excel')
