@@ -1,0 +1,21 @@
+{
+  "fdf00bc5-2942-4b0e-8f45-8dd223478710": {
+    "application_id": "953867",
+    "student_name": "মাহমুদ",
+    "deleted_at": "2025-04-11 06:50 AM",
+    "status_at_deletion": "Processing",
+    "messages": [
+      {
+        "text": "Salam",
+        "sent_by": "applicant",
+        "timestamp": "2025-04-08 07:22 AM",
+        "read": true
+      },
+      {
+        "text": "Salam",
+        "sent_by": "admin",
+        "timestamp": "2025-04-08 07:24 AM"
+      }
+    ]
+  }
+}
