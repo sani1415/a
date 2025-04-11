@@ -40,21 +40,42 @@ body {
 }
 
 .button-section {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
   margin: 30px;
 }
 
-.apply-button {
-  background-color: #28a745;
-  color: white;
+.apply-button,
+.login-button {
+  flex: 1 1 220px;
+  max-width: 220px;
+  text-align: center;
   padding: 15px 25px;
   font-size: 18px;
   text-decoration: none;
   border-radius: 8px;
   transition: 0.3s;
+  display: inline-block;
+}
+
+.apply-button {
+  background-color: #28a745;
+  color: white;
 }
 
 .apply-button:hover {
   background-color: #218838;
+}
+
+.login-button {
+  background-color: #4a6bdf;
+  color: white;
+}
+
+.login-button:hover {
+  background-color: #3a56b9;
 }
 
 .form-container {
@@ -99,17 +120,3 @@ form button:hover {
   background-color: #218838;
 }
 
-.login-button {
-  background-color: #4a6bdf;
-  color: white;
-  padding: 15px 25px;
-  font-size: 18px;
-  text-decoration: none;
-  border-radius: 8px;
-  transition: 0.3s;
-  margin-left: 15px;
-}
-
-.login-button:hover {
-  background-color: #3a56b9;
-}
