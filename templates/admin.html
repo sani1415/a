@@ -52,8 +52,9 @@
     .dropdown-content div:hover {
       background-color: #ddd;
     }
-
-    .dropdown:hover .dropdown-content {
+    
+    /* Show dropdown when active class is present instead of on hover */
+    .dropdown-content.show {
       display: block;
     }
 
@@ -454,6 +455,33 @@
     let currentSortColumn = -1;
     let sortDirection = 'asc';
     let currentDeleteIndex = -1;
+    
+    // Close all dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+      if (!event.target.matches('.dropdown span')) {
+        const dropdowns = document.querySelectorAll('.dropdown-content');
+        dropdowns.forEach(dropdown => {
+          dropdown.classList.remove('show');
+        });
+      }
+    });
+    
+    // Toggle dropdown menu on click
+    function toggleDropdown(event) {
+      event.stopPropagation(); // Prevent the document click handler from immediately closing it
+      
+      // Close all other dropdowns
+      const dropdowns = document.querySelectorAll('.dropdown-content');
+      dropdowns.forEach(dropdown => {
+        if (dropdown !== event.target.nextElementSibling) {
+          dropdown.classList.remove('show');
+        }
+      });
+      
+      // Toggle the clicked dropdown
+      const dropdownContent = event.target.nextElementSibling;
+      dropdownContent.classList.toggle('show');
+    }
 
     fetch('/status-log')
       .then(res => res.json())
@@ -515,7 +543,7 @@
           <td>
             <span class="status ${student.status}">${student.status}</span>
             <div class="dropdown">
-              <span style="cursor:pointer;">⋮</span>
+              <span style="cursor:pointer;" onclick="toggleDropdown(event)">⋮</span>
               <div class="dropdown-content">
                 <div onclick="updateStatus(${actualIndex}, 'Processing')">⏳ Processing</div>
                 <div onclick="updateStatus(${actualIndex}, 'Accepted')">✅ Accepted</div>
