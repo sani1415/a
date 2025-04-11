@@ -166,113 +166,112 @@
       border-bottom: 3px solid #28a745;
       font-weight: bold;
     }
-    <style>
-      /* Tab Styling */
-      .tab-container {
-        width: 100%;
-      }
 
-      .tabs {
-        display: flex;
-        border-bottom: 1px solid #ddd;
-        margin-bottom: 15px;
-      }
+    /* Tab Styling */
+    .tab-container {
+      width: 100%;
+    }
 
-      .tab {
-        padding: 10px 20px;
-        cursor: pointer;
-        font-weight: normal;
-      }
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 15px;
+    }
 
-      .tab.active {
-        font-weight: bold;
-        border-bottom: 2px solid #28a745;
-      }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      font-weight: normal;
+    }
 
-      .tab-content {
-        display: none;
-      }
+    .tab.active {
+      font-weight: bold;
+      border-bottom: 2px solid #28a745;
+    }
 
-      .tab-content.active {
-        display: block;
-      }
+    .tab-content {
+      display: none;
+    }
 
-      /* Message Styling */
-      .messages-container {
-        height: 350px;
-        overflow-y: auto;
-        border: 1px solid #eee;
-        border-radius: 4px;
-        padding: 15px;
-        background-color: #f9f9f9;
-        margin-bottom: 15px;
-      }
+    .tab-content.active {
+      display: block;
+    }
 
-      .admin-message, .applicant-message {
-        max-width: 70%;
-        margin-bottom: 15px;
-        padding: 10px 15px;
-        border-radius: 15px;
-        position: relative;
-      }
+    /* Message Styling */
+    .messages-container {
+      height: 350px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      border-radius: 4px;
+      padding: 15px;
+      background-color: #f9f9f9;
+      margin-bottom: 15px;
+    }
 
-      .admin-message {
-        background-color: #e8f5e9;
-        align-self: flex-start;
-        border-bottom-left-radius: 5px;
-        margin-right: auto;
-      }
+    .admin-message, .applicant-message {
+      max-width: 70%;
+      margin-bottom: 15px;
+      padding: 10px 15px;
+      border-radius: 15px;
+      position: relative;
+    }
 
-      .applicant-message {
-        background-color: #dcf8c6;
-        align-self: flex-end;
-        border-bottom-right-radius: 5px;
-        margin-left: auto;
-      }
+    .admin-message {
+      background-color: #e8f5e9;
+      align-self: flex-start;
+      border-bottom-left-radius: 5px;
+      margin-right: auto;
+    }
 
-      .time {
-        font-size: 11px;
-        color: #888;
-        margin-top: 5px;
-        text-align: right;
-      }
+    .applicant-message {
+      background-color: #dcf8c6;
+      align-self: flex-end;
+      border-bottom-right-radius: 5px;
+      margin-left: auto;
+    }
 
-      .loading-messages {
-        text-align: center;
-        padding: 20px;
-        color: #666;
-      }
+    .time {
+      font-size: 11px;
+      color: #888;
+      margin-top: 5px;
+      text-align: right;
+    }
 
-      .no-messages {
-        text-align: center;
-        padding: 20px;
-        color: #666;
-        font-style: italic;
-      }
+    .loading-messages {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
 
-      .message-count {
-        text-align: right;
-        font-size: 12px;
-        color: #666;
-        margin-bottom: 15px;
-      }
+    .no-messages {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+      font-style: italic;
+    }
 
-      .archive-info {
-        background-color: #f0f0f0;
-        padding: 10px 15px;
-        border-radius: 4px;
-        margin-bottom: 15px;
-        font-size: 14px;
-      }
+    .message-count {
+      text-align: right;
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 15px;
+    }
 
-      .message-btn {
-        background-color: #6c757d;
-      }
+    .archive-info {
+      background-color: #f0f0f0;
+      padding: 10px 15px;
+      border-radius: 4px;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
 
-      .text-center {
-        text-align: center;
-      }
-    </style>
+    .message-btn {
+      background-color: #6c757d;
+    }
+
+    .text-center {
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -310,188 +309,37 @@
     </tbody>
   </table>
 
-  <!-- Message Archive Modal -->
-  <div id="messageArchiveModal" class="modal">
-    <div class="modal-content">
+  <!-- View Details Modal -->
+  <div id="viewDetailsModal" class="modal">
+    <div class="modal-content" style="width: 600px; max-height: 80vh;">
       <div class="modal-header">
-        <h2>Message History</h2>
-        <span class="close-modal" onclick="closeMessageModal()">&times;</span>
+        <h2>আবেদনকারী বিস্তারিত</h2>
+        <span class="close-modal" onclick="closeViewModal()">&times;</span>
       </div>
-      <div class="modal-body">
-        <div id="messageContainer"></div>
+      <div class="modal-body" id="viewDetailsContent">
+        <div class="tab-container">
+          <div class="tabs">
+            <div class="tab active" onclick="switchTab(this, 'details-content')">বিস্তারিত তথ্য</div>
+            <div class="tab" onclick="switchTab(this, 'messages-content')">বার্তালাপ ইতিহাস</div>
+          </div>
+
+          <div id="details-content" class="tab-content active">
+            <!-- Details content will be loaded here -->
+          </div>
+
+          <div id="messages-content" class="tab-content">
+            <div class="messages-container" id="archivedMessages">
+              <!-- Archived messages will be loaded here -->
+              <div class="loading-messages">বার্তা লোড হচ্ছে...</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
-  <script>
-    let deletedApplicants = [];
-
-    function fetchDeletedApplicants() {
-      fetch('/deleted-data')
-        .then(res => res.json())
-        .then(data => {
-          deletedApplicants = data;
-          displayDeletedApplicants(data);
-        })
-        .catch(err => {
-          console.error("Error fetching deleted applicants:", err);
-        });
-    }
-
-    function displayDeletedApplicants(applicants) {
-      const tbody = document.getElementById('deletedTableBody');
-      tbody.innerHTML = '';
-
-      if (applicants.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7">কোন মুছে ফেলা আবেদনকারী পাওয়া যায়নি</td></tr>`;
-        return;
-      }
-
-      applicants.forEach(applicant => {
-        const row = document.createElement('tr');
-        
-        let actions = `
-          <button onclick="restoreApplicant('${applicant.id}')">পুনরুদ্ধার</button>
-        `;
-        
-        if (applicant.has_messages) {
-          actions += `
-            <button onclick="viewMessages('${applicant.id}')">বার্তাসমূহ</button>
-          `;
-        }
-        
-        row.innerHTML = `
-          <td>
-            ${applicant.photo ? `
-              <img src="/static/uploads/${applicant.photo}" alt="ছবি" style="width:40px;height:40px;cursor:pointer;border-radius:50%;margin-bottom:5px;" onclick="showImagePopup('/static/uploads/${applicant.photo}')"><br>` : ''}
-            ${applicant.name}
-          </td>
-          <td>${applicant.class}</td>
-          <td>${applicant.guardian}</td>
-          <td>${applicant.phone}</td>
-          <td>${applicant.deleted_at}</td>
-          <td>${applicant.delete_reason || 'কোন কারণ দেওয়া হয়নি'}</td>
-          <td>${actions}</td>
-        `;
-        
-        tbody.appendChild(row);
-      });
-    }
-
-    function searchDeletedStudents() {
-      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-      const filteredApplicants = deletedApplicants.filter(applicant =>
-        applicant.name.toLowerCase().includes(searchTerm) ||
-        applicant.phone.toLowerCase().includes(searchTerm)
-      );
-      displayDeletedApplicants(filteredApplicants);
-    }
-
-    function restoreApplicant(id) {
-      if (confirm('আপনি কি নিশ্চিত যে আপনি এই আবেদনকারীকে পুনরুদ্ধার করতে চান?')) {
-        fetch(`/restore-applicant/${id}`, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'}
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            alert('আবেদনকারী সফলভাবে পুনরুদ্ধার করা হয়েছে!');
-            fetchDeletedApplicants();
-          } else {
-            alert('আবেদনকারী পুনরুদ্ধার করতে সমস্যা হয়েছে: ' + data.error);
-          }
-        })
-        .catch(err => {
-          console.error("Error restoring applicant:", err);
-          alert('আবেদনকারী পুনরুদ্ধার করতে সমস্যা হয়েছে!');
-        });
-      }
-    }
-
-    function showImagePopup(src) {
-      const overlay = document.createElement("div");
-      overlay.style.position = "fixed";
-      overlay.style.top = 0;
-      overlay.style.left = 0;
-      overlay.style.width = "100vw";
-      overlay.style.height = "100vh";
-      overlay.style.background = "rgba(0,0,0,0.8)";
-      overlay.style.display = "flex";
-      overlay.style.justifyContent = "center";
-      overlay.style.alignItems = "center";
-      overlay.style.zIndex = 9999;
-
-      const img = document.createElement("img");
-      img.src = src;
-      img.style.maxWidth = "90%";
-      img.style.maxHeight = "90%";
-      img.style.border = "5px solid white";
-      img.style.borderRadius = "8px";
-      overlay.appendChild(img);
-
-      overlay.onclick = () => overlay.remove();
-      document.body.appendChild(overlay);
-    }
-
-    function viewMessages(applicantId) {
-      console.log("Fetching messages for:", applicantId);
-      fetch(`/get-archived-messages/${applicantId}`)
-        .then(res => {
-          if (!res.ok) {
-            throw new Error(`HTTP error! Status: ${res.status}`);
-          }
-          return res.json();
-        })
-        .then(data => {
-          displayMessages(data.messages, applicantId);
-        })
-        .catch(err => {
-          console.error("Error fetching messages:", err);
-          alert('বার্তা লোড করতে সমস্যা হয়েছে!');
-        });
-    }
-
-    function displayMessages(messages, applicantId) {
-      const applicant = deletedApplicants.find(a => a.id === applicantId);
-      const container = document.getElementById('messageContainer');
-      
-      if (!messages || messages.length === 0) {
-        container.innerHTML = `<p>কোনো বার্তা পাওয়া যায়নি।</p>`;
-      } else {
-        let html = `<h3>${applicant.name} এর বার্তাসমূহ</h3>`;
-        
-        messages.forEach(message => {
-          const isAdmin = message.sent_by === 'admin';
-          const alignment = isAdmin ? 'right' : 'left';
-          const bgColor = isAdmin ? '#e6f7ff' : '#f0f0f0';
-          
-          html += `
-            <div style="text-align: ${alignment}; margin: 10px 0;">
-              <div style="display: inline-block; background-color: ${bgColor}; padding: 10px; border-radius: 10px; max-width: 80%;">
-                <p style="margin: 0;">${message.text}</p>
-                <small style="color: #777;">${isAdmin ? 'অ্যাডমিন' : 'আবেদনকারী'} - ${message.timestamp}</small>
-              </div>
-            </div>
-          `;
-        });
-        
-        container.innerHTML = html;
-      }
-      
-      document.getElementById('messageArchiveModal').style.display = 'block';
-    }
-
-    function closeMessageModal() {
-      document.getElementById('messageArchiveModal').style.display = 'none';
-    }
-
-    // Load deleted applicants on page load
-    document.addEventListener('DOMContentLoaded', fetchDeletedApplicants);
-
-    // Auto refresh every 2 minutes
-    setInterval(fetchDeletedApplicants, 120000);
-  </script>v id="messageArchiveModal" class="modal">
+  <!-- Message Archive Modal -->
+  <div id="messageArchiveModal" class="modal">
     <div class="modal-content" style="width: 600px; max-height: 80vh;">
       <div class="modal-header">
         <h2>আর্কাইভ করা বার্তালাপ - <span id="messageArchiveStudentName"></span></h2>
@@ -515,33 +363,6 @@
       </div>
     </div>
   </div>
-  
-  <!-- Add tabs to the viewDetailsModal -->
-<div class="modal-body" id="viewDetailsContent">
-  <div class="tab-container">
-    <div class="tabs">
-      <div class="tab active" onclick="switchTab(this, 'details-content')">বিস্তারিত তথ্য</div>
-      <div class="tab" onclick="switchTab(this, 'messages-content')">বার্তালাপ ইতিহাস</div>
-    </div>
-
-    
-
-
-
-    
-    
-    <div id="details-content" class="tab-content active">
-      <!-- Existing details content will be here -->
-    </div>
-    
-    <div id="messages-content" class="tab-content">
-      <div class="messages-container" id="archivedMessages">
-        <!-- Archived messages will be loaded here -->
-        <div class="loading-messages">বার্তা লোড হচ্ছে...</div>
-      </div>
-    </div>
-  </div>
-</div>
 
   <!-- Restore Confirmation Modal -->
   <div id="restoreModal" class="modal">
@@ -553,7 +374,7 @@
       <div class="modal-body">
         <p>আপনি কি নিশ্চিত যে আপনি এই আবেদনকারীকে পুনরুদ্ধার করতে চান?</p>
         <p class="applicant-name" id="restoreApplicantName"></p>
-        
+
         <div class="button-group">
           <button onclick="closeRestoreModal()" class="cancel-btn">বাতিল করুন</button>
           <button onclick="confirmRestore()" class="restore-confirm-btn">পুনরুদ্ধার করুন</button>
@@ -576,6 +397,7 @@
           displayDeletedStudents(data);
         })
         .catch(err => {
+          console.error("Error fetching deleted applicants:", err);
           document.getElementById('deletedTableBody').innerHTML = `
             <tr>
               <td colspan="7" class="empty-list">মুছে ফেলা আবেদনকারীদের তালিকা লোড করতে সমস্যা হয়েছে।</td>
@@ -584,36 +406,40 @@
         });
     }
 
+    function switchTab(tabElement, contentId) {
+      // Remove active class from all tabs
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
 
-  function switchTab(tabElement, contentId) {
-  // Remove active class from all tabs
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.classList.remove('active');
-  });
-  
-  // Hide all tab contents
-  document.querySelectorAll('.tab-content').forEach(content => {
-    content.classList.remove('active');
-  });
-  
-  // Add active class to selected tab
-  tabElement.classList.add('active');
-  
-  // Show selected content
-  document.getElementById(contentId).classList.add('active');
-  
-  // If messages tab is selected, load messages
-  if (contentId === 'messages-content' && currentViewId) {
-    loadArchivedMessages(currentViewId, 'archivedMessages');
-  }
-}
+      // Hide all tab contents
+      document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+
+      // Add active class to selected tab
+      tabElement.classList.add('active');
+
+      // Show selected content
+      document.getElementById(contentId).classList.add('active');
+
+      // If messages tab is selected, load messages
+      if (contentId === 'messages-content' && currentViewId) {
+        loadArchivedMessages(currentViewId, 'archivedMessages');
+      }
+    }
 
     function loadArchivedMessages(studentId, containerId) {
       const container = document.getElementById(containerId);
       container.innerHTML = '<div class="loading-messages">বার্তা লোড হচ্ছে...</div>';
 
       fetch(`/get-archived-messages/${studentId}`)
-        .then(res => res.json())
+        .then(res => {
+          if (!res.ok) {
+            throw new Error(`HTTP error! Status: ${res.status}`);
+          }
+          return res.json();
+        })
         .then(data => {
           if (!data.messages || data.messages.length === 0) {
             container.innerHTML = '<div class="no-messages">কোন বার্তা পাওয়া যায়নি</div>';
@@ -643,6 +469,7 @@
           container.scrollTop = container.scrollHeight;
         })
         .catch(error => {
+          console.error("Error loading messages:", error);
           container.innerHTML = '<div class="no-messages">বার্তা লোড করতে সমস্যা হয়েছে</div>';
         });
     }
@@ -654,7 +481,7 @@
 
       document.getElementById('messageArchiveStudentName').textContent = student.name;
       document.getElementById('messageArchiveDeleteDate').textContent = student.deleted_at;
-      document.getElementById('messageArchiveStatus').textContent = student.status;
+      document.getElementById('messageArchiveStatus').textContent = student.status || 'Processing';
 
       // Show the modal
       document.getElementById('messageArchiveModal').style.display = 'block';
@@ -666,12 +493,11 @@
     function closeMessageArchiveModal() {
       document.getElementById('messageArchiveModal').style.display = 'none';
     }
-    
 
     // Display deleted students in table
     function displayDeletedStudents(students) {
       const tbody = document.getElementById('deletedTableBody');
-      
+
       if (students.length === 0) {
         tbody.innerHTML = `
           <tr>
@@ -692,10 +518,10 @@
           <td class="deleted-date">${student.deleted_at}</td>
           <td class="deletion-reason">${formatReason(student.delete_reason)}</td>
           <td>
-  <button class="action-btn view-btn" onclick="viewDetails('${student.id}')">বিস্তারিত</button>
-  <button class="action-btn restore-btn" onclick="showRestoreConfirmation('${student.id}')">পুনরুদ্ধার</button>
-  ${student.has_messages ? `<button class="action-btn message-btn" onclick="viewArchivedMessages('${student.id}')">💬 বার্তালাপ</button>` : ''}
-</td>
+            <button class="action-btn view-btn" onclick="viewDetails('${student.id}')">বিস্তারিত</button>
+            <button class="action-btn restore-btn" onclick="showRestoreConfirmation('${student.id}')">পুনরুদ্ধার</button>
+            ${student.has_messages ? `<button class="action-btn message-btn" onclick="viewArchivedMessages('${student.id}')">💬 বার্তালাপ</button>` : ''}
+          </td>
         `;
         tbody.appendChild(row);
       });
@@ -704,13 +530,13 @@
     // Format reason text
     function formatReason(reason) {
       if (!reason) return "কোন কারণ উল্লেখ করা হয়নি";
-      
+
       const reasonMap = {
         'duplicate': 'ডুপ্লিকেট আবেদন',
         'incomplete': 'অসম্পূর্ণ তথ্য',
         'requested': 'আবেদনকারী অনুরোধ করেছেন'
       };
-      
+
       return reasonMap[reason] || reason;
     }
 
@@ -726,54 +552,54 @@
 
     // View applicant details
     function viewDetails(id) {
-  currentViewId = id;
-  const student = deletedStudents.find(s => s.id === id);
-  
-  if (!student) return;
-  
-  const content = document.getElementById('details-content');
-  content.innerHTML = `
-    <div style="text-align: center; margin-bottom: 15px;">
-      ${student.photo ? `<img src="/static/uploads/${student.photo}" alt="ছবি" style="width:100px;height:100px;border-radius:50%;margin-bottom:10px;">` : ''}
-      <h3 style="margin: 5px 0;">${student.name}</h3>
-      <div style="color: #666; font-size: 14px;">মুছে ফেলা হয়েছে: ${student.deleted_at}</div>
-    </div>
-    
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
-      <div style="padding: 10px; background: #f9f9f9;">
-        <strong>জন্ম তারিখ:</strong> ${student.birth}
-      </div>
-      <div style="padding: 10px; background: #f9f9f9;">
-        <strong>শ্রেণি:</strong> ${student.class}
-      </div>
-      <div style="padding: 10px; background: #f9f9f9;">
-        <strong>অভিভাবক:</strong> ${student.guardian}
-      </div>
-      <div style="padding: 10px; background: #f9f9f9;">
-        <strong>মোবাইল:</strong> ${student.phone}
-      </div>
-      <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
-        <strong>ঠিকানা:</strong> ${student.address}
-      </div>
-      <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
-        <strong>আবেদনের তারিখ:</strong> ${student.submitted_at}
-      </div>
-      <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
-        <strong>মুছে ফেলার কারণ:</strong> ${formatReason(student.delete_reason)}
-      </div>
-    </div>
-    
-    <div style="margin-top: 20px; text-align: center;">
-      <button onclick="showRestoreConfirmation('${student.id}')" class="restore-confirm-btn" style="background-color: #28a745;">পুনরুদ্ধার করুন</button>
-    </div>
-  `;
-  
-  // Reset to the details tab
-  document.querySelector('.tab').click();
-  
-  // Show the modal
-  document.getElementById('viewDetailsModal').style.display = 'block';
-}
+      currentViewId = id;
+      const student = deletedStudents.find(s => s.id === id);
+
+      if (!student) return;
+
+      const content = document.getElementById('details-content');
+      content.innerHTML = `
+        <div style="text-align: center; margin-bottom: 15px;">
+          ${student.photo ? `<img src="/static/uploads/${student.photo}" alt="ছবি" style="width:100px;height:100px;border-radius:50%;margin-bottom:10px;">` : ''}
+          <h3 style="margin: 5px 0;">${student.name}</h3>
+          <div style="color: #666; font-size: 14px;">মুছে ফেলা হয়েছে: ${student.deleted_at}</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px;">
+          <div style="padding: 10px; background: #f9f9f9;">
+            <strong>জন্ম তারিখ:</strong> ${student.birth}
+          </div>
+          <div style="padding: 10px; background: #f9f9f9;">
+            <strong>শ্রেণি:</strong> ${student.class}
+          </div>
+          <div style="padding: 10px; background: #f9f9f9;">
+            <strong>অভিভাবক:</strong> ${student.guardian}
+          </div>
+          <div style="padding: 10px; background: #f9f9f9;">
+            <strong>মোবাইল:</strong> ${student.phone}
+          </div>
+          <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
+            <strong>ঠিকানা:</strong> ${student.address}
+          </div>
+          <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
+            <strong>আবেদনের তারিখ:</strong> ${student.submitted_at}
+          </div>
+          <div style="padding: 10px; background: #f9f9f9; grid-column: span 2;">
+            <strong>মুছে ফেলার কারণ:</strong> ${formatReason(student.delete_reason)}
+          </div>
+        </div>
+
+        <div style="margin-top: 20px; text-align: center;">
+          <button onclick="showRestoreConfirmation('${student.id}')" class="restore-confirm-btn" style="background-color: #28a745;">পুনরুদ্ধার করুন</button>
+        </div>
+      `;
+
+      // Reset to the details tab
+      document.querySelector('.tab').click();
+
+      // Show the modal
+      document.getElementById('viewDetailsModal').style.display = 'block';
+    }
 
     // Close view modal
     function closeViewModal() {
@@ -784,12 +610,12 @@
     function showRestoreConfirmation(id) {
       currentRestoreId = id;
       const student = deletedStudents.find(s => s.id === id);
-      
+
       if (!student) return;
-      
+
       document.getElementById('restoreApplicantName').textContent = student.name;
       document.getElementById('restoreModal').style.display = 'block';
-      
+
       // Close view modal if open
       closeViewModal();
     }
@@ -802,7 +628,7 @@
     // Confirm restore
     function confirmRestore() {
       if (!currentRestoreId) return;
-      
+
       fetch(`/restore-applicant/${currentRestoreId}`, {
         method: 'POST'
       })
@@ -813,7 +639,7 @@
           deletedStudents = deletedStudents.filter(s => s.id !== currentRestoreId);
           displayDeletedStudents(deletedStudents);
           closeRestoreModal();
-          
+
           // Show success notification
           alert('আবেদনকারী সফলভাবে পুনরুদ্ধার করা হয়েছে!');
         }
@@ -834,13 +660,41 @@
     window.onclick = function(event) {
       const viewModal = document.getElementById('viewDetailsModal');
       const restoreModal = document.getElementById('restoreModal');
-      
+      const messageModal = document.getElementById('messageArchiveModal');
+
       if (event.target === viewModal) {
         closeViewModal();
       } else if (event.target === restoreModal) {
         closeRestoreModal();
+      } else if (event.target === messageModal) {
+        closeMessageArchiveModal();
       }
     };
+
+    function showImagePopup(src) {
+      const overlay = document.createElement("div");
+      overlay.style.position = "fixed";
+      overlay.style.top = 0;
+      overlay.style.left = 0;
+      overlay.style.width = "100vw";
+      overlay.style.height = "100vh";
+      overlay.style.background = "rgba(0,0,0,0.8)";
+      overlay.style.display = "flex";
+      overlay.style.justifyContent = "center";
+      overlay.style.alignItems = "center";
+      overlay.style.zIndex = 9999;
+
+      const img = document.createElement("img");
+      img.src = src;
+      img.style.maxWidth = "90%";
+      img.style.maxHeight = "90%";
+      img.style.border = "5px solid white";
+      img.style.borderRadius = "8px";
+      overlay.appendChild(img);
+
+      overlay.onclick = () => overlay.remove();
+      document.body.appendChild(overlay);
+    }
   </script>
 </body>
 </html>
