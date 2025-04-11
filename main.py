@@ -322,6 +322,24 @@ def get_messages(application_id):
     messages = all_messages.get(application_id, [])
     return jsonify(messages)
 
+@app.route('/mark-messages-read/<application_id>', methods=['POST'])
+def mark_messages_read(application_id):
+    with open('messages.json', 'r', encoding='utf-8') as f:
+        all_messages = json.load(f)
+    
+    # If this applicant has messages
+    if application_id in all_messages:
+        # Mark all messages as read by adding a 'read' flag
+        for message in all_messages[application_id]:
+            if message.get('sent_by') == 'applicant':
+                message['read'] = True
+        
+        # Save updated messages
+        with open('messages.json', 'w', encoding='utf-8') as f:
+            json.dump(all_messages, f, ensure_ascii=False, indent=2)
+    
+    return jsonify({"success": True})
+
 @app.route('/logout')
 def logout():
     session.clear()

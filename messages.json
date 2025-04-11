@@ -20,7 +20,8 @@
     {
       "text": "আসসালামু আলাইকুম",
       "sent_by": "applicant",
-      "timestamp": "2025-04-07 08:05 PM"
+      "timestamp": "2025-04-07 08:05 PM",
+      "read": true
     },
     {
       "text": "ওয়ালাইকুম আসসালাম",
@@ -37,7 +38,8 @@
     {
       "text": "Salam",
       "sent_by": "applicant",
-      "timestamp": "2025-04-08 07:22 AM"
+      "timestamp": "2025-04-08 07:22 AM",
+      "read": true
     },
     {
       "text": "Salam",
@@ -49,7 +51,8 @@
     {
       "text": "salam",
       "sent_by": "applicant",
-      "timestamp": "2025-04-08 10:31 AM"
+      "timestamp": "2025-04-08 10:31 AM",
+      "read": true
     },
     {
       "text": "salam",
@@ -59,14 +62,16 @@
     {
       "text": "a",
       "sent_by": "applicant",
-      "timestamp": "2025-04-08 10:34 AM"
+      "timestamp": "2025-04-08 10:34 AM",
+      "read": true
     }
   ],
   "824689": [
     {
       "text": "salam",
       "sent_by": "applicant",
-      "timestamp": "2025-04-08 01:35 PM"
+      "timestamp": "2025-04-08 01:35 PM",
+      "read": true
     },
     {
       "text": "salam",

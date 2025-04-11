@@ -277,6 +277,10 @@
     function selectStudent(applicationId) {
       currentStudentId = applicationId;
       unreadMessages[applicationId] = 0;
+      // Mark messages as read on the server
+  fetch(`/mark-messages-read/${applicationId}`, {
+    method: 'POST'
+  });
 
       // Update the active state in the list
       populateStudentsList();
@@ -380,47 +384,43 @@
 
     // Check for new messages periodically
     function checkForNewMessages() {
-      // For each student with an application ID
-      students.forEach(student => {
-        if (student.application_id) {
-          fetch(`/get-messages/${student.application_id}`)
-            .then(res => res.json())
-            .then(data => {
-              // If this is the current student, update the messages
-              if (student.application_id === currentStudentId) {
-                const oldLength = activeMessages.length;
-                activeMessages = data;
-                studentMessages[student.application_id] = data;
-
-                if (data.length > oldLength) {
-                  displayMessages();
-                }
-              } else {
-                // Check for unread messages
-                const newMessages = data.filter(m => m.sent_by === 'applicant');
-                
-                // If we don't have this student's messages cached yet
-                if (!studentMessages[student.application_id]) {
-                  studentMessages[student.application_id] = data;
-                  unreadMessages[student.application_id] = newMessages.length;
-                } else {
-                  const cachedMessages = studentMessages[student.application_id].filter(m => m.sent_by === 'applicant');
-                  
-                  // If there are new applicant messages
-                  if (newMessages.length > cachedMessages.length) {
-                    unreadMessages[student.application_id] = unreadMessages[student.application_id] || 0;
-                    unreadMessages[student.application_id] += (newMessages.length - cachedMessages.length);
-                    studentMessages[student.application_id] = data;
-                  }
-                }
-              }
-
-              // Update the students list to show unread counts
-              populateStudentsList();
-            });
-        }
-      });
+  // For each student with an application ID
+  students.forEach(student => {
+    if (student.application_id) {
+      fetch(`/get-messages/${student.application_id}`)
+        .then(res => res.json())
+        .then(data => {
+          // Get the cached messages or initialize an empty array
+          const cachedMessages = studentMessages[student.application_id] || [];
+          
+          // If this is the current student, update the messages but don't count as unread
+          if (student.application_id === currentStudentId) {
+            const oldLength = activeMessages.length;
+            activeMessages = data;
+            studentMessages[student.application_id] = data;
+            
+            // If there are new messages, display them
+            if (data.length > oldLength) {
+              displayMessages();
+            }
+          } else {
+            // Only count new applicant messages as unread
+            const newMessages = data.filter(m => m.sent_by === 'applicant' && !m.read);
+            
+            if (newMessages.length > 0) {
+              // Set unread count to the number of unread messages
+              unreadMessages[student.application_id] = newMessages.length;
+              // Update cache
+              studentMessages[student.application_id] = data;
+            }
+          }
+          
+          // Update the students list to show unread counts
+          populateStudentsList();
+        });
     }
+  });
+}
 
     // Initialize
     fetchStudents();
