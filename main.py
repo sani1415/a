@@ -14,17 +14,28 @@ app = Flask(__name__, static_folder='static')
 app.secret_key = 'madrasatul_madinah_secret_key'  # Required for session
 
 # Generate a unique ID and password
-def generate_credentials():
-    # Generate a 6-digit application ID
-    application_id = ''.join(random.choices(string.digits, k=6))
+def generate_credentials(phone_number):
+        # Load current applications to determine the next ID
+        try:
+            with open('data.json', 'r', encoding='utf-8') as f:
+                content = f.read()
+                current_data = json.loads(content) if content.strip() else []
+        except FileNotFoundError:
+            current_data = []
 
-    # Generate a simple 8-character password
-    password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+        # Get total applications count for the ID
+        total_applications = len(current_data) + 1
 
-    # Hash the password for storage
-    hashed_password = hashlib.md5(password.encode()).hexdigest()
+        # Format the ID with a prefix and padding (e.g. APP000123)
+        application_id = f"APP{total_applications:06d}"
 
-    return application_id, password, hashed_password
+        # Use the phone number as password
+        password = phone_number
+
+        # Hash the password for storage
+        hashed_password = hashlib.md5(password.encode()).hexdigest()
+
+        return application_id, password, hashed_password
 
 # Load deleted applicants data
 def load_deleted_applicants():
@@ -49,7 +60,8 @@ def save_deleted_applicants(data):
 @app.route('/submit', methods=['POST'])
 def submit():
     # Generate credentials
-    application_id, password, hashed_password = generate_credentials()
+    phone = request.form.get('phone')
+    application_id, password, hashed_password = generate_credentials(phone)
 
     data = {
         'name': request.form.get('name'),

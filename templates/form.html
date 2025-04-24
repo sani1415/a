@@ -32,7 +32,7 @@
       <label for="guardian">অভিভাবকের নাম:</label>
       <input type="text" id="guardian" name="guardian" required>
 
-      <label for="phone">অভিভাবকের মোবাইল নম্বর:</label>
+      <label for="phone">অভিভাবকের মোবাইল নম্বর: <span style="color: #dc3545; font-size: 0.9em;">(এই নম্বরটি আপনার পাসওয়ার্ড হিসেবে ব্যবহৃত হবে)</span></label>
       <input type="tel" id="phone" name="phone" required>
 
       <label for="address">ছাত্রের ঠিকানা:</label>
@@ -66,7 +66,7 @@
           <div class="credentials-box">
             <h3>আপনার লগইন তথ্য:</h3>
             <p><strong>অ্যাপ্লিকেশন আইডি:</strong> ${response.application_id}</p>
-            <p><strong>পাসওয়ার্ড:</strong> ${response.password}</p>
+            <p><strong>পাসওয়ার্ড:</strong> ${response.password} (আপনার মোবাইল নম্বর)</p>
             <p style="color:red; font-weight:bold">দয়া করে এই তথ্য সংরক্ষণ করুন!</p>
           </div>
         `;
